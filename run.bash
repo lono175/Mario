@@ -1,3 +1,2 @@
 #! /bin/bash
-PYTHONPATH=../../system/codecs/Python/src/ python src/MarioAgent.py
-
+PYTHONPATH=../../system/codecs/Python/src/ python src/MarioAgent.py 
