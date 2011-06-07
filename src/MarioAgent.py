@@ -28,6 +28,7 @@ import tool
 
 from random import choice
 import string
+MaxY = 15
 class MonType:
     Mario = 0
     RedKoopa = 1
@@ -70,6 +71,8 @@ def getAction(dir, isJump, isSpeed):
     action.intArray.append(isJump)
     action.intArray.append(isSpeed)
     return action
+def dumpAction(action):
+    print action.intArray[0], " ", action.intArray[1], " ", action.intArray[2]
 def getAllAction():
     actionList = []
     for dir in [-1, 0, 1]:
@@ -80,6 +83,93 @@ def getAllAction():
     #actionList = [getAction(1, 1, 1)]
     return actionList
     
+	
+    #Returns the char representing the tile at the given location.
+    #If unknown, returns 'x'.
+    #
+    #Valid tiles:
+    #M - the tile mario is currently on. there is no tile for a monster.
+    #$ - a coin
+    #b - a smashable brick
+    #? - a question block
+    #| - a pipe. gets its own tile because often there are pirahna plants
+        #in them
+    #! - the finish line
+    #And an integer in [1,7] is a 3 bit binary flag
+     #first bit is "cannot go through this tile from above"
+     #second bit is "cannot go through this tile from below"
+     #third bit is "cannot go through this tile from either side"
+def getTileAt(xf, yf, obs):
+    x = int(xf)
+    if x < 0:
+        return ord('7')
+    y = 16 - int(yf)
+    x =  x - obs.intArray[0]
+    if x < 0 or x > 21 or y < 0 or y > 15:
+        return ord('x')
+    index = y*22+x;
+    tile = obs.charArray[index]
+    #print obs.charArray
+    #print ord(tile)
+    return ord(tile)
+        
+def getMario(obs):
+    monList = getMonsters(obs)
+    for m in monList:
+        if m.type == MonType.Mario or m.type == MonType.BigMario or m.type == MonType.FieryMario:
+            #print "type: ", m.type
+            return m
+    assert(False)
+                
+def getMonsters(obs):
+    monList = []
+    for i in range(0, len(obs.intArray)):
+        if i % 2 == 0:
+           continue 
+
+        id = i / 2
+        type = obs.intArray[i]
+        winged = obs.intArray[i+1]
+        m = Monster()
+        m.type = type
+        m.winged = False
+        if winged != 0:
+            m.winged = True    
+
+        #print "index ", i
+        #print "len ", len(obs.doubleArray)
+        m.x = obs.doubleArray[4*id];
+        m.y = obs.doubleArray[4*id+1];
+        m.sx = obs.doubleArray[4*id+2];
+        m.sy = obs.doubleArray[4*id+3];
+        monList.append(m)
+
+    return monList
+def getTileList(obs):
+    
+    tileList = []
+    mario = getMario(obs)
+    mario.x = int(mario.x)
+    mario.y = int(mario.y)
+    offset = -(MaxY - mario.y)
+    for dy in range(offset, 5):
+        for dx in range(0, 7):
+            tile = getTileAt(mario.x + dx, mario.y + dy, obs) 		
+            tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
+    return tileList
+
+def getSarsaFeature(obs):
+    monList = getMonsters(obs) 
+    marioLoc = getMario(obs)
+    tileList = getTileList(obs)
+    feaList = []
+    #feaList.append((int(0), int(marioLoc.y + 0.5), int(marioLoc.sx), int(marioLoc.sy), marioLoc.type, marioLoc.winged))
+    for m in monList:
+        #fea = (int(m.x - marioLoc.x + 0.5), int(m.y - marioLoc.y + 0.5), int(m.sx - marioLoc.sx + 0.5), int(m.sy - marioLoc.sy + 0.5), m.type, m.winged)
+        fea = (int(m.x - marioLoc.x + 0.5), int(m.y - marioLoc.y + 0.5),  m.type, m.winged)
+        feaList.append(fea)
+    feaList.extend(tileList)
+    return feaList
 class LinearSarsaAgent(Agent):
 
     def __init__(self):
@@ -88,7 +178,7 @@ class LinearSarsaAgent(Agent):
         actionList = getAllAction()
         initialQ = 0
         dumpCount = 100000
-        self.agent = LinearSARSA(0.1, 0.05, 0.95, actionList, initialQ, dumpCount)
+        self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
         self.totalStep = 0
         
     def agent_init(self,taskSpecString):
@@ -116,75 +206,35 @@ class LinearSarsaAgent(Agent):
     def __del__(self):
         print "descructing...."
         tool.Save(self, "mario.db")
-    def getMario(self, obs):
-        monList = self.getMonsters(obs)
-        for m in monList:
-            if m.type == MonType.Mario or m.type == MonType.BigMario or m.type == MonType.FieryMario:
-                #print "type: ", m.type
-                return m
-        assert(False)
-                    
-    def getMonsters(self, obs):
-        monList = []
-        #print obs.intArray
-        #print obs.doubleArray
-        for i, type in enumerate(obs.intArray):
-            m = Monster()
-            if i == 0:
-                continue
-            if i % 2 == 0:
-                m.winged = False
-                if type != 0:
-                    m.winged = True    
-            else:
-                m.type = type
-            if i % 2 == 0:
-                continue
-            id = i/2
-
-            #print "index ", i
-            #print "len ", len(obs.doubleArray)
-            m.x = obs.doubleArray[4*id];
-            m.y = obs.doubleArray[4*id+1];
-            m.sx = obs.doubleArray[4*id+2];
-            m.sy = obs.doubleArray[4*id+3];
-            monList.append(m)
-                
-
-        return monList
-    def getSarsaFeature(self, obs):
-        monList = self.getMonsters(obs) 
-        marioLoc = self.getMario(obs)
-        feaList = []
-        for m in monList:
-            fea = (int(m.x - marioLoc.x + 0.5), int(m.y - marioLoc.y + 0.5))
-            feaList.append(fea)
-        return feaList
     def agent_start(self,observation):
-        fea = self.getSarsaFeature(observation)
-        self.lastMarioLoc = self.getMario(observation) #for internal reward system
+        fea = getSarsaFeature(observation)
+        self.lastMarioLoc = getMario(observation) #for internal reward system
         action = self.agent.start(fea)
         self.stepNum = 0
         return action
 
     def agent_step(self, reward, observation):
+        if reward == -0.01:
+            reward = -0.2
         #print observation.intArray
         #print reward
         #mario = self.getMario(observation)
         #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
-        fea = self.getSarsaFeature(observation)
-        marioLoc = self.getMario(observation) #for internal reward system
+        fea = getSarsaFeature(observation)
+        marioLoc = getMario(observation) #for internal reward system
         dx = marioLoc.x - self.lastMarioLoc.x
         reward = reward + dx
         #print fea
         action = self.agent.step(reward, fea)
+        #dumpAction(action)
         self.lastMarioLoc = marioLoc
         self.stepNum = self.stepNum + 1
+
         return action
 
     def agent_end(self,reward):
         if reward == -10.0:
-            reward = -50.0
+            reward = -30.0
         print "end: ", reward, " ", self.stepNum
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
