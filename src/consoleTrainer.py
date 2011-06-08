@@ -17,7 +17,7 @@
 
 import rlglue.RLGlue as RLGlue
 from consoleTrainerHelper import *
-
+import random
 def main():
     whichTrainingMDP = 0
     # Uncomment ONE of the following lines to choose your experiment
@@ -26,17 +26,20 @@ def main():
      #loadAcrobot(whichTrainingMDP); #put the desired parameter set in where MDP is in [1,49] #0 is standard acrobot
      #loadPolyathlon(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,5]
     #typeList = [121, 123, 32]
-    typeList = [121]
+    #typeList = [121]
     
-    for type in typeList:
-        for diff in range(0, 1):
+    
+    #for type in typeList:
+    for numRun in range(0, 500):
+        for diff in range(3, 4):
+            type = int(random.random()*10000)
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
 
             # and then,
             #		just run the experiment:
             RLGlue.RL_init()
-            episodesToRun = 30
+            episodesToRun = 10
             totalSteps = 0
             for i in range(episodesToRun):
                 RLGlue.RL_episode(20000)

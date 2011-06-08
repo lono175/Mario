@@ -180,6 +180,8 @@ class LinearSarsaAgent(Agent):
         dumpCount = 100000
         self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
         self.totalStep = 0
+        self.rewardList = []
+        self.distList = []
         
     def agent_init(self,taskSpecString):
 
@@ -238,6 +240,8 @@ class LinearSarsaAgent(Agent):
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMarioLoc.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
+        self.rewardList.append(reward)
+        self.distList.append(self.lastMarioLoc.x)
     def agent_cleanup(self):
         pass
 
@@ -270,6 +274,6 @@ class LinearSarsaAgent(Agent):
 
 
 if __name__=="__main__":        
-    agent = tool.Load("mario.db")
-    AgentLoader.loadAgent(agent)
-    #AgentLoader.loadAgent(LinearSarsaAgent())
+    #agent = tool.Load("mario.db")
+    #AgentLoader.loadAgent(agent)
+    AgentLoader.loadAgent(LinearSarsaAgent())
