@@ -235,7 +235,7 @@ class LinearSarsaAgent(Agent):
     def agent_end(self,reward):
         if reward == -10.0:
             reward = -30.0
-        print "end: ", reward, " ", self.stepNum
+        print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMarioLoc.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
     def agent_cleanup(self):
