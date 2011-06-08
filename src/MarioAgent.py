@@ -42,6 +42,7 @@ class MonType:
     Shall = 9
     BigMario = 10
     FieryMario = 11
+    GeneralObj = 12
 class Monster:
     def __init__(self):
         pass
@@ -152,21 +153,35 @@ def getTileList(obs):
     mario.x = int(mario.x)
     mario.y = int(mario.y)
     offset = -(MaxY - mario.y)
-    for dy in range(offset, 5):
-        for dx in range(0, 7):
+    #for dy in range(offset, 5):
+        #for dx in range(0, 7):
+    for dy in range(-2, 3):
+        for dx in range(0, 3):
             tile = getTileAt(mario.x + dx, mario.y + dy, obs) 		
             tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
     return tileList
 
 def getSarsaFeature(obs):
     monList = getMonsters(obs) 
-    marioLoc = getMario(obs)
+    mario = getMario(obs)
     tileList = getTileList(obs)
     feaList = []
-    #feaList.append((int(0), int(marioLoc.y + 0.5), int(marioLoc.sx), int(marioLoc.sy), marioLoc.type, marioLoc.winged))
+    #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx), int(mario.sy), 0, mario.winged))
+    feaList.append(1) #add a constant term
+    #add a dummy term to indicate the location of mario
+    feaList.append((int(0), int(mario.y + 0.5), int(mario.sx+0.5), int(mario.sy+0.5), 0, 2))
     for m in monList:
-        #fea = (int(m.x - marioLoc.x + 0.5), int(m.y - marioLoc.y + 0.5), int(m.sx - marioLoc.sx + 0.5), int(m.sy - marioLoc.sy + 0.5), m.type, m.winged)
-        fea = (int(m.x - marioLoc.x + 0.5), int(m.y - marioLoc.y + 0.5),  m.type, m.winged)
+        if m.x == mario.x and m.y == mario.y:
+            continue
+        #a general one to let mario "fear" the monster
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), MonType.GeneralObj, m.winged)
+        feaList.append(fea)
+    for m in monList:
+        if m.x == mario.x and m.y == mario.y:
+            continue
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), int(m.sy + 0.5), m.type, m.winged)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
     feaList.extend(tileList)
     return feaList
@@ -223,13 +238,14 @@ class LinearSarsaAgent(Agent):
         #mario = self.getMario(observation)
         #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         fea = getSarsaFeature(observation)
-        marioLoc = getMario(observation) #for internal reward system
-        dx = marioLoc.x - self.lastMarioLoc.x
-        reward = reward + dx
+        mario = getMario(observation) #for internal reward system
+        dx = mario.x - self.lastMarioLoc.x
+        #let mario finish the level as fast as possible
+        reward = reward + dx*0.5
         #print fea
         action = self.agent.step(reward, fea)
         #dumpAction(action)
-        self.lastMarioLoc = marioLoc
+        self.lastMarioLoc = mario
         self.stepNum = self.stepNum + 1
 
         return action
@@ -275,5 +291,6 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     #agent = tool.Load("mario.db")
+    #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
     AgentLoader.loadAgent(LinearSarsaAgent())
