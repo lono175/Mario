@@ -48,6 +48,12 @@ class LinearSARSA:
                 i = i + 1
             return action
 
+    def getAllQ(self, ob):
+        Q = []
+        for action in self.actionList:
+            Q.append(self.getQ(ob, action))
+        return Q
+
     def getQ(self, ob, action):
         self.touch(ob, action)
         Q = 0

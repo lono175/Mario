@@ -157,7 +157,18 @@ def getTileList(obs):
             tile = getTileAt(mario.x + dx, mario.y + dy, obs) 		
             tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
     return tileList
-
+def getConstantQ(obs, agent):
+    feaList = getConstantFeature(observation)    
+    Q = agent.getAllQ(feaList)
+    return Q
+def getTileQ(obs, agent):
+    feaList = getTileFeature(observation)    
+    Q = agent.getAllQ(feaList)
+    return Q
+def getMonsterQ(obs, agent):
+    feaList = getMonsterFeature(obs)
+    Q = agent.getAllQ(feaList)
+    return Q
 def getSarsaFeature(obs):
     monList = getMonsters(obs) 
     marioLoc = getMario(obs)
