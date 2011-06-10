@@ -278,19 +278,20 @@ class LinearSarsaAgent(Agent):
         mario = getMario(obs) #for internal reward system
         dx = mario.x - self.lastMarioLoc.x
         #let mario finish the level as fast as possible
-        reward = reward + dx*0.5
+        #reward = reward + dx*0.5
+        reward = reward + dx
         print "reward: ", reward
         #print fea
         action = self.agent.step(reward, fea)
-        print "Q: ", self.agent.getQ(fea, action)
+        #print "Q: ", self.agent.getQ(fea, action)
 
         #print self.agent.actionList
         #print self.totalStep, "---------------"
         #dumpActionList(self.agent.actionList)
-        #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
-        #print "monst fea: ", getMonsterFeature(obs)
-        #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
-        #print "TileQ: ", dumpList(getTileQ(obs, self.agent))
+        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        print "monst fea: ", getMonsterFeature(obs)
+        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        print "TileQ: ", dumpList(getTileQ(obs, self.agent))
 
 
         #dumpAction(action)
