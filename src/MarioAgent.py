@@ -23,6 +23,7 @@ from rlglue.types import Observation
 from rlglue.agent import AgentLoader as AgentLoader
 from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 from LinearSARSA import LinearSARSA
+from LambdaSARSA import LambdaSARSA
 import tool
 
 
@@ -30,18 +31,18 @@ from random import choice
 import string
 MaxY = 15
 class MonType:
-    Mario = 0
+    Mario = 0 #good
     RedKoopa = 1
     GreenKoopa = 2
     Goomba = 3
     Spikey = 4
     PiranhaPlant = 5
-    Mushroom = 6
-    FireFlower = 7
-    Fireball = 8
+    Mushroom = 6 #good
+    FireFlower = 7 #good
+    Fireball = 8 #good
     Shall = 9
-    BigMario = 10
-    FieryMario = 11
+    BigMario = 10 #good
+    FieryMario = 11 #good
     GeneralObj = 12
 class Monster:
     def __init__(self):
@@ -74,6 +75,15 @@ def getAction(dir, isJump, isSpeed):
     return action
 def dumpAction(action):
     print action.intArray[0], " ", action.intArray[1], " ", action.intArray[2]
+
+def dumpActionList(actionList):
+    for action in actionList:
+        print (action.intArray[0], action.intArray[1], action.intArray[2]),
+    print ""
+def dumpList(list):
+    for item in list:
+        print '%02.3f'%item, " ",
+    print " "
 def getAllAction():
     actionList = []
     for dir in [-1, 0, 1]:
@@ -161,26 +171,28 @@ def getTileList(obs):
             tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
     return tileList
 def getConstantQ(obs, agent):
-    feaList = getConstantFeature(observation)    
+    feaList = getConstantFeature(obs)    
     Q = agent.getAllQ(feaList)
     return Q
 def getTileQ(obs, agent):
-    feaList = getTileFeature(observation)    
+    feaList = getTileList(obs)    
     Q = agent.getAllQ(feaList)
     return Q
 def getMonsterQ(obs, agent):
     feaList = getMonsterFeature(obs)
     Q = agent.getAllQ(feaList)
     return Q
-def getSarsaFeature(obs):
-    monList = getMonsters(obs) 
+def getConstantFeature(obs):
     mario = getMario(obs)
-    tileList = getTileList(obs)
     feaList = []
-    #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx), int(mario.sy), 0, mario.winged))
     feaList.append(1) #add a constant term
     #add a dummy term to indicate the location of mario
     feaList.append((int(0), int(mario.y + 0.5), int(mario.sx+0.5), int(mario.sy+0.5), 0, 2))
+    return feaList
+def getMonsterFeature(obs):
+    feaList = []
+    monList = getMonsters(obs) 
+    mario = getMario(obs)
     for m in monList:
         if m.x == mario.x and m.y == mario.y:
             continue
@@ -194,7 +206,19 @@ def getSarsaFeature(obs):
         fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), int(m.sy + 0.5), m.type, m.winged)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
-    feaList.extend(tileList)
+    return feaList
+    
+    
+def getSarsaFeature(obs):
+    tileList = getTileList(obs)
+    feaList = []
+    #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx), int(mario.sy), 0, mario.winged))
+    fea = getConstantFeature(obs)
+    feaList.extend(fea)
+    fea = getMonsterFeature(obs)
+    feaList.extend(fea)
+    fea = getTileList(obs)
+    feaList.extend(fea)
     return feaList
 class LinearSarsaAgent(Agent):
 
@@ -204,7 +228,8 @@ class LinearSarsaAgent(Agent):
         actionList = getAllAction()
         initialQ = 0
         dumpCount = 100000
-        self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
+        #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
+        self.agent = LambdaSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
         self.distList = []
@@ -234,27 +259,36 @@ class LinearSarsaAgent(Agent):
     def __del__(self):
         print "descructing...."
         tool.Save(self, "mario.db")
-    def agent_start(self,observation):
-        fea = getSarsaFeature(observation)
-        self.lastMarioLoc = getMario(observation) #for internal reward system
+    def agent_start(self,obs):
+        fea = getSarsaFeature(obs)
+        self.lastMarioLoc = getMario(obs) #for internal reward system
         action = self.agent.start(fea)
         self.stepNum = 0
         return action
 
-    def agent_step(self, reward, observation):
+    def agent_step(self, reward, obs):
         if reward == -0.01:
             reward = -0.2
-        #print observation.intArray
+        #print obs.intArray
         #print reward
-        #mario = self.getMario(observation)
+        #mario = self.getMario(obs)
         #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
-        fea = getSarsaFeature(observation)
-        mario = getMario(observation) #for internal reward system
+        fea = getSarsaFeature(obs)
+        mario = getMario(obs) #for internal reward system
         dx = mario.x - self.lastMarioLoc.x
         #let mario finish the level as fast as possible
         reward = reward + dx*0.5
         #print fea
         action = self.agent.step(reward, fea)
+
+        #print self.agent.actionList
+        print self.totalStep, "---------------"
+        dumpActionList(self.agent.actionList)
+        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        print "monst fea: ", getMonsterFeature(obs)
+        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        print "TileQ: ", dumpList(getTileQ(obs, self.agent))
+
         #dumpAction(action)
         self.lastMarioLoc = mario
         self.stepNum = self.stepNum + 1
