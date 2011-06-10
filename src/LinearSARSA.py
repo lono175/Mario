@@ -94,7 +94,6 @@ class LinearSARSA:
 
     def step(self, reward, observation):
         ob = observation
-        self.lastObservation = ob
         self.touchAll(ob)
         newAction = self.selectAction(ob)
         if self.isUpdate:

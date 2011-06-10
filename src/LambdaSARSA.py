@@ -1,5 +1,5 @@
 import random
-
+import copy
 class LambdaSARSA:
     def __init__(self, alpha, epsilon, gamma, actionList, initialQ, dumpCount ):
         self.alpha = alpha
@@ -81,6 +81,7 @@ class LambdaSARSA:
         for fea in lastObservation:
             key = (fea, lastAction)
             self.Q[key] = self.Q[key] + self.alpha*deltaPerFeature*self.trace[key]
+            #self.Q[key] = self.Q[key] + self.alpha*deltaPerFeature
         
     def clearTrace(self):
         self.trace = {}
@@ -125,7 +126,6 @@ class LambdaSARSA:
 
     def step(self, reward, observation):
         ob = observation
-        self.lastObservation = ob
         self.touchAll(ob)
         newAction = self.selectAction(ob)
         if self.isUpdate:

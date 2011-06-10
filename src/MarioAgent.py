@@ -30,6 +30,7 @@ import tool
 from random import choice
 import string
 MaxY = 15
+episilon = 0.005
 class MonType:
     Mario = 0 #good
     RedKoopa = 1
@@ -267,7 +268,7 @@ class LinearSarsaAgent(Agent):
         return action
 
     def agent_step(self, reward, obs):
-        if reward == -0.01:
+        if reward < -0.01 + episilon and reward > -0.01 - episilon:
             reward = -0.2
         #print obs.intArray
         #print reward
@@ -278,16 +279,19 @@ class LinearSarsaAgent(Agent):
         dx = mario.x - self.lastMarioLoc.x
         #let mario finish the level as fast as possible
         reward = reward + dx*0.5
+        print "reward: ", reward
         #print fea
         action = self.agent.step(reward, fea)
+        print "Q: ", self.agent.getQ(fea, action)
 
         #print self.agent.actionList
-        print self.totalStep, "---------------"
-        dumpActionList(self.agent.actionList)
-        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
-        print "monst fea: ", getMonsterFeature(obs)
-        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
-        print "TileQ: ", dumpList(getTileQ(obs, self.agent))
+        #print self.totalStep, "---------------"
+        #dumpActionList(self.agent.actionList)
+        #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        #print "monst fea: ", getMonsterFeature(obs)
+        #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        #print "TileQ: ", dumpList(getTileQ(obs, self.agent))
+
 
         #dumpAction(action)
         self.lastMarioLoc = mario
