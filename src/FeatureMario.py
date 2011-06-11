@@ -25,10 +25,19 @@ def getMonsterGridMap(obs):
             map[y, x] = getTileAt(x, y, obs)
     #add monster
     monList = getMonsterNoMario(obs)
+    #TODO: adjust coordinate here
+    originX = getOrigin(obs)
+    #print "ori:", originX
     for m in monList:
-        map[int(m.y), int(m.x)] = m.type
+        #print "x:", m.x
+        x = int(m.x - originX)
+        if x > MaxX:
+            continue
+        map[int(m.y), int(m.x - originX)] = m.type
     return map
-    
+def getOrigin(obs):
+    return obs.intArray[0]
+        
 def getGridFeature(map, x, y, halfLen):
     bX = max(x - halfLen, 0)
     bY = max(y - halfLen, 0)

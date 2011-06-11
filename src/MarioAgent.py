@@ -32,7 +32,24 @@ from random import choice
 import string
 MaxY = 15
 episilon = 0.005
-
+def saveObj(obj):
+        
+    print "descructing...."
+    #print self.lastMarioLoc
+    #print self.totalStep
+    #print self.agent
+    #print self.rewardList
+    #print self.distList
+    #print "before dump3"
+    #print self
+    #print "before dump4"
+    #di = dir(self)
+    #print di
+    #obj = self
+    #for attr in di:
+        #print "obj.%s = %s" % (attr, getattr(obj, attr))
+    #dumpObj(self)
+    tool.Save(obj, "mario.db")
 def GenPasswd():
     chars = string.letters + string.digits
     for i in range(8):
@@ -69,6 +86,12 @@ def dumpList(list):
     for item in list:
         print '%02.3f'%item, " ",
     print " "
+def dumpObj(obj):
+    print "dump4...."
+    print dir(obj) 
+    print "dump4...."
+    for attr in dir(obj):
+        print "obj.%s = %s" % (attr, getattr(obj, attr))
 def getAllAction():
     actionList = []
     for dir in [-1, 0, 1]:
@@ -114,9 +137,26 @@ class LinearSarsaAgent(Agent):
         #print "int",self.int_action_ranges,self.action.numInts 
         #print "doubles",self.double_action_ranges,self.action.numDoubles
         #print "chars",self.action.numChars 
-    def __del__(self):
-        print "descructing...."
-        tool.Save(self, "mario.db")
+    #def __del__(self):
+        #from copy import deepcopy
+        #deepcopy(1)
+        #
+        #print "descructing...."
+        ##print self.lastMarioLoc
+        ##print self.totalStep
+        ##print self.agent
+        ##print self.rewardList
+        ##print self.distList
+        #print "before dump3"
+        #print self
+        #print "before dump4"
+        #di = dir(self)
+        #print di
+        #obj = self
+        #for attr in di:
+            #print "obj.%s = %s" % (attr, getattr(obj, attr))
+        #dumpObj(self)
+        #tool.Save(self, "mario.db")
     def agent_start(self,obs):
         fea = getSarsaFeature(obs)
         self.lastMarioLoc = getMario(obs) #for internal reward system
@@ -137,7 +177,7 @@ class LinearSarsaAgent(Agent):
         #let mario finish the level as fast as possible
         #reward = reward + dx*0.5
         reward = reward + dx
-        print "reward: ", reward
+        #print "reward: ", reward
         #print fea
         action = self.agent.step(reward, fea)
         #print "Q: ", self.agent.getQ(fea, action)
@@ -145,10 +185,10 @@ class LinearSarsaAgent(Agent):
         #print self.agent.actionList
         #print self.totalStep, "---------------"
         #dumpActionList(self.agent.actionList)
-        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
-        print "monst fea: ", getMonsterFeatureList(obs)
-        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
-        print "TileQ: ", dumpList(getGridQ(obs, self.agent))
+        #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        #print "monst fea: ", getMonsterFeatureList(obs)
+        #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        #print "TileQ: ", dumpList(getGridQ(obs, self.agent))
 
 
         #dumpAction(action)
@@ -159,7 +199,7 @@ class LinearSarsaAgent(Agent):
 
     def agent_end(self,reward):
         if reward == -10.0:
-            reward = -30.0
+            reward = -50.0
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMarioLoc.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
@@ -197,7 +237,10 @@ class LinearSarsaAgent(Agent):
 
 
 if __name__=="__main__":        
-    #agent = tool.Load("mario.db")
+    import atexit
+    agent = tool.Load("mario.db")
+    atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
-    #AgentLoader.loadAgent(agent)
-    AgentLoader.loadAgent(LinearSarsaAgent())
+    AgentLoader.loadAgent(agent)
+    
+    #AgentLoader.loadAgent(LinearSarsaAgent())
