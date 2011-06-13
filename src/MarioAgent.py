@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#TODO: add location to tile feature
+#TODO: add speed to feature
 import random
 import sys
 from rlglue.agent.Agent import Agent
@@ -166,7 +168,7 @@ class LinearSarsaAgent(Agent):
 
     def agent_step(self, reward, obs):
         if reward < -0.01 + episilon and reward > -0.01 - episilon:
-            reward = -0.2
+            reward = -1
         #print obs.intArray
         #print reward
         #mario = self.getMario(obs)
@@ -176,19 +178,24 @@ class LinearSarsaAgent(Agent):
         dx = mario.x - self.lastMarioLoc.x
         #let mario finish the level as fast as possible
         #reward = reward + dx*0.5
+        #if dx < 0:
+            #dx = dx/2
         reward = reward + dx
         #print "reward: ", reward
         #print fea
         action = self.agent.step(reward, fea)
-        #print "Q: ", self.agent.getQ(fea, action)
 
-        #print self.agent.actionList
-        #print self.totalStep, "---------------"
-        #dumpActionList(self.agent.actionList)
-        #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
-        #print "monst fea: ", getMonsterFeatureList(obs)
-        #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
-        #print "TileQ: ", dumpList(getGridQ(obs, self.agent))
+        print self.agent.actionList
+        print self.totalStep, "---------------"
+        dumpActionList(self.agent.actionList)
+        print "Q: ", self.agent.getQ(fea, action)
+        print "action:", dumpAction(action)
+        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        print "monst fea: ", getMonsterFeatureList(obs)
+        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        print "TileQ: ", dumpList(getGridQ(obs, self.agent))
+        for ind in range(0, 7):
+            print "TileQ: ", ind, " ",dumpList(getGridQInd(obs, self.agent, ind))
 
 
         #dumpAction(action)
@@ -239,8 +246,9 @@ class LinearSarsaAgent(Agent):
 if __name__=="__main__":        
     import atexit
     agent = tool.Load("mario.db")
+    #agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
-    AgentLoader.loadAgent(agent)
+    #AgentLoader.loadAgent(agent)
     
-    #AgentLoader.loadAgent(LinearSarsaAgent())
+    AgentLoader.loadAgent(agent)

@@ -1,6 +1,6 @@
 from numpy  import *
-MaxY = 15
-MaxX = 21
+MaxY = 16
+MaxX = 22
 class MonType:
     Mario = 0 #good
     RedKoopa = 1
@@ -18,8 +18,13 @@ class MonType:
 class Monster:
     def __init__(self):
         pass
+#for unit test
+class Observation:
+    def __init__(self):
+        pass
+
 def getMonsterGridMap(obs):
-    map = zeros( (MaxY+1, MaxX+1), dtype=int )     
+    map = zeros( (MaxY, MaxX), dtype=int )     
     for y in range(0, MaxY):
         for x in range(0, MaxX):
             map[y, x] = getTileAt(x, y, obs)
@@ -31,18 +36,26 @@ def getMonsterGridMap(obs):
     for m in monList:
         #print "x:", m.x
         x = int(m.x - originX)
-        if x > MaxX:
+        y = int(m.y)
+        if x >= MaxX:
             continue
-        map[int(m.y), int(m.x - originX)] = m.type
+        if y >= MaxY:
+            continue
+        map[y, x] = m.type
     return map
 def getOrigin(obs):
     return obs.intArray[0]
         
 def getGridFeature(map, x, y, halfLen):
+    #print x
+    #print y
+    #assert(x >= -1)
+    #assert(x < MaxX)
+    #assert(y >= 0)
     bX = max(x - halfLen, 0)
     bY = max(y - halfLen, 0)
-    eX = min(x + halfLen + 1, MaxX + 1)
-    eY = min(y + halfLen + 1, MaxY + 1)
+    eX = min(x + halfLen + 1, MaxX)
+    eY = min(y + halfLen + 1, MaxY)
     subMat = map[bY:eY, bX:eX]
     fea = []
     for row in subMat:
@@ -55,6 +68,10 @@ def getCrossShape(x, y, halfLen):
     locList.append((x + halfLen, y + halfLen))
     locList.append((x - halfLen, y - halfLen))
     locList.append((x - halfLen, y + halfLen))
+
+    locList.append((x + 2*halfLen, y + 3*halfLen))
+    locList.append((x + 2*halfLen, y - 3*halfLen))
+    locList.append((x + 3*halfLen, y))
     #locList.append(x, y)
     #locList.append(x, y + 2*halfLen)
     #locList.append(x, y - 2*halfLen)
@@ -65,9 +82,13 @@ def getCrossShape(x, y, halfLen):
 def getGridFeatureList(obs):
     halfLen = 1
     map = getMonsterGridMap(obs)
+    #print map
     #sample with cross shape
     mario = getMario(obs)
-    locList = getCrossShape(int(mario.x), int(mario.y), halfLen)
+    #print "mario Loc: ", mario.x
+    #print "mario Loc: ", mario.y
+    #print "origin Loc: ", getOrigin(obs)
+    locList = getCrossShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
     feaList = []
     for loc in locList:
         fea = getGridFeature(map, loc[0], loc[1], halfLen)
@@ -91,18 +112,14 @@ def getGridFeatureList(obs):
     #first bit is "cannot go through this tile from above"
     #second bit is "cannot go through this tile from below"
     #third bit is "cannot go through this tile from either side"
-def getTileAt(xf, yf, obs):
-    x = int(xf)
-    if x < 0:
-        return ord('7')
-    y = 16 - int(yf)
-    x =  x - obs.intArray[0]
-    if x < 0 or x > 21 or y < 0 or y > 15:
-        return ord('x')
-    index = y*22+x;
+#x, y is the relative coordinate
+def getTileAt(x, y, obs):
+    assert(x >= 0)
+    assert(x < MaxX)
+    assert(y >= 0)
+    assert(y < MaxY)
+    index = y*MaxX+x;
     tile = obs.charArray[index]
-    #print obs.charArray
-    #print ord(tile)
     return ord(tile)
         
 def getMario(obs):
@@ -160,14 +177,18 @@ def getMonsterList(obs):
         #print "index ", i
         #print "len ", len(obs.doubleArray)
         m.x = obs.doubleArray[4*id];
-        m.y = obs.doubleArray[4*id+1];
+        #print "y ", obs.doubleArray[4*id+1]
+        #assert(obs.doubleArray[4*id+1] >= -1)
+        #assert(obs.doubleArray[4*id+1] < MaxY)
+        m.y = MaxY - obs.doubleArray[4*id+1];
         m.sx = obs.doubleArray[4*id+2];
         m.sy = obs.doubleArray[4*id+3];
         monList.append(m)
 
     return monList
+#this function is buggy
 def getTileList(obs):
-    
+    assert(False) 
     tileList = []
     mario = getMario(obs)
     mario.x = int(mario.x)
@@ -177,7 +198,7 @@ def getTileList(obs):
         #for dx in range(0, 7):
     for dy in range(-2, 3):
         for dx in range(0, 3):
-            tile = getTileAt(mario.x + dx, mario.y + dy, obs) 		
+            tile = getTileAt(mario.x + dx, mario.y + dy, obs) 	#TODO	
             tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
     return tileList
 def getConstantQ(obs, agent):
@@ -192,6 +213,12 @@ def getGridQ(obs, agent):
     feaList = getGridFeatureList(obs)    
     Q = agent.getAllQ(feaList)
     return Q
+def getGridQInd(obs, agent, index):
+    oldfeaList = getGridFeatureList(obs)    
+    fea = oldfeaList[index]
+    
+    Q = agent.getAllQ([fea])
+    return Q
 def getMonsterQ(obs, agent):
     feaList = getMonsterFeatureList(obs)
     Q = agent.getAllQ(feaList)
@@ -201,7 +228,7 @@ def getConstantFeature(obs):
     feaList = []
     feaList.append(1) #add a constant term
     #add a dummy term to indicate the location of mario
-    feaList.append((int(0), int(mario.y + 0.5), int(mario.sx+0.5), int(mario.sy+0.5), 0, 2))
+    #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx+0.5), int(mario.sy+0.5), 0, 2))
     return feaList
 
 def getMonsterFeatureList(obs):
@@ -223,8 +250,8 @@ def getMonsterFeatureList(obs):
 def getSarsaFeature(obs):
     feaList = []
     #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx), int(mario.sy), 0, mario.winged))
-    fea = getConstantFeature(obs)
-    feaList.extend(fea)
+    #fea = getConstantFeature(obs)
+    #feaList.extend(fea)
     fea = getMonsterFeatureList(obs)
     feaList.extend(fea)
     #fea = getTileList(obs)
@@ -254,12 +281,83 @@ def getSarsaFeature(obs):
         #m.sy = obs.doubleArray[4*id+3];
         #monList.append(m)
 #------------unit test function------------------
+def addMonster(m, obs):
+    obs.doubleArray.append(m.x)
+    obs.doubleArray.append(m.y)
+    obs.doubleArray.append(m.sx)
+    obs.doubleArray.append(m.sy)
+    obs.intArray.append(m.type)
+    obs.intArray.append(m.winged)
+    return obs
+
 def getObservation():
-    monNum = 2
+    obs = Observation()
+    obs.doubleArray = []
+    obs.intArray = [40] #originX
     obs.charArray = []
-    for y in range(0, MaxY+1):
-        for x in range(0, MaxX+1):
+    for y in range(0, MaxY):
+        for x in range(0, MaxX):
             obs.charArray.append('7')
+
+    m = createMario()
+    obs = addMonster(m, obs)
+
+    m = createSpikey()
+    obs = addMonster(m, obs)
+    
+    m = createMushroom()
+    obs = addMonster(m, obs)
+    return obs
+def createMario():
+    m = Monster()
+    m.type = MonType.BigMario
+    m.winged = False
+    m.x = 59
+    m.y = 15
+    m.sx = 42.0
+    m.sy = 43.0
+    return m
+def createMushroom():
+    m = Monster()
+    m.type = MonType.Mushroom
+    m.winged = False
+    m.x = 59
+    m.y = 15
+    m.sx = 40.0
+    m.sy = 41.0
+    return m
+def createSpikey():
+    m = Monster()
+
+    m.type = MonType.Spikey
+    m.winged = False
+    m.x = 60
+    m.y = 15
+    m.sx = 42.0
+    m.sy = 43.0
+    return m
+    
+def Test():
+    obs = getObservation()
+    assert(getOrigin(obs) == 40)
+    badList = getBadMonster(obs)
+    spikey = createSpikey()
+    mush = createMushroom()
+    bad = badList[0]
+    assert(bad.type == spikey.type)
+    assert(bad.x == spikey.x)
+    assert(bad.y == spikey.y)
+    assert(bad.sx == spikey.sx)
+    assert(bad.sy == spikey.sy)
+    assert(bad.winged == spikey.winged)
+    map =  getMonsterGridMap(obs)
+    print map
+
+    gridFeature = getGridFeatureList(obs)
+    print gridFeature
+
+
+    
 if __name__ == '__main__':
-    pass 
+    Test()
     
