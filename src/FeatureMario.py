@@ -57,11 +57,38 @@ def getGridFeature(map, x, y, halfLen):
     eX = min(x + halfLen + 1, MaxX)
     eY = min(y + halfLen + 1, MaxY)
     subMat = map[bY:eY, bX:eX]
-    fea = []
+    fea = [(x, y)] #add coordinate
     for row in subMat:
         fea.append(tuple(row))
     return tuple(fea)
+
 #int, int, int->listof loc
+def getRegularGridShape(x, y, halfLen):
+    locList = []
+    blockLen = 2*halfLen + 1
+
+    #5 by 5 large block
+    for i in range(0, 3):
+        for j in range(-1, 3):
+            locList.append((x + blockLen*i, y + blockLen*j))
+            
+    return locList
+
+def getReducedRegularGridShape(x, y, halfLen):
+    locList = []
+    blockLen = 2*halfLen + 1
+    
+    locList.append((x, y))
+    locList.append((x, y + blockLen))
+    locList.append((x, y + 2*blockLen))
+    locList.append((x + blockLen, y))
+    locList.append((x + 2*blockLen, y))
+    #5 by 5 large block
+    #for i in range(0, 3):
+        #for j in range(-2, 2):
+            #locList.append((x + blockLen*i, y + blockLen*j))
+            
+    return locList
 def getCrossShape(x, y, halfLen):
     locList = []
     locList.append((x + halfLen, y - halfLen))
@@ -88,7 +115,9 @@ def getGridFeatureList(obs):
     #print "mario Loc: ", mario.x
     #print "mario Loc: ", mario.y
     #print "origin Loc: ", getOrigin(obs)
-    locList = getCrossShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
+    #locList = getCrossShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
+    #locList = getRegularGridShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
+    locList = getReducedRegularGridShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
     feaList = []
     for loc in locList:
         fea = getGridFeature(map, loc[0], loc[1], halfLen)

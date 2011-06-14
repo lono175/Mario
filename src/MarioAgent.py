@@ -112,7 +112,7 @@ class LinearSarsaAgent(Agent):
         initialQ = 0
         dumpCount = 100000
         #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
-        self.agent = LambdaSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
+        self.agent = LambdaSARSA(0.10, 0.10, 0.95, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
         self.distList = []
@@ -185,17 +185,30 @@ class LinearSarsaAgent(Agent):
         #print fea
         action = self.agent.step(reward, fea)
 
-        print self.agent.actionList
-        print self.totalStep, "---------------"
-        dumpActionList(self.agent.actionList)
-        print "Q: ", self.agent.getQ(fea, action)
-        print "action:", dumpAction(action)
-        print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
-        print "monst fea: ", getMonsterFeatureList(obs)
-        print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
-        print "TileQ: ", dumpList(getGridQ(obs, self.agent))
-        for ind in range(0, 7):
-            print "TileQ: ", ind, " ",dumpList(getGridQInd(obs, self.agent, ind))
+        #print self.agent.actionList
+        #print self.totalStep, "---------------"
+        #dumpActionList(self.agent.actionList)
+        #print "Q: ", self.agent.getQ(fea, action)
+        #print "action:", dumpAction(action)
+        #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
+        #print "monst fea: ", getMonsterFeatureList(obs)
+        #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
+        #print "TileQ: ", dumpList(getGridQ(obs, self.agent))
+        #ind = 0
+        #halfLen = 1
+        #locList = getReducedRegularGridShape(int(mario.x - getOrigin(obs)), int(mario.y), halfLen)
+        #map = getMonsterGridMap(obs)
+        #print "marioLoc: ", (mario.x, mario.y)
+        #for loc in locList:
+            #fea = getGridFeature(map, loc[0], loc[1], halfLen)
+            #print fea
+            #print "TileQ: ", loc, " ",dumpList(getGridQInd(obs, self.agent, ind))
+            #ind = ind + 1
+
+
+                #print "TileQ: ", ind, " ",dumpList(getGridQInd(obs, self.agent, ind))
+        #for ind in range(0, 7):
+            #print "TileQ: ", ind, " ",dumpList(getGridQInd(obs, self.agent, ind))
 
 
         #dumpAction(action)
@@ -245,8 +258,8 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     import atexit
-    agent = tool.Load("mario.db")
-    #agent = LinearSarsaAgent()
+    #agent = tool.Load("mario.db")
+    agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
