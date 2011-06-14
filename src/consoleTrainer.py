@@ -25,13 +25,13 @@ def main():
     #loadHelicopter(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,9]
      #loadAcrobot(whichTrainingMDP); #put the desired parameter set in where MDP is in [1,49] #0 is standard acrobot
      #loadPolyathlon(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,5]
-    typeList = [121, 122, 123, 124, 125]
+    typeList = [121, 122, 123, 124, 125, 41, 42, 43, 44, 45]
     #typeList = [121]
     
     
     for type in typeList:
     #for numRun in range(0, 10):
-        for diff in range(1, 2):
+        for diff in range(2, 5):
             #type = int(random.random()*10000)
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
@@ -39,7 +39,7 @@ def main():
             # and then,
             #		just run the experiment:
             RLGlue.RL_init()
-            episodesToRun = 5000
+            episodesToRun = 500
             totalSteps = 0
             for i in range(episodesToRun):
                 RLGlue.RL_episode(20000)
