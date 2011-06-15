@@ -112,7 +112,7 @@ class LinearSarsaAgent(Agent):
         initialQ = 0
         dumpCount = 100000
         #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
-        self.agent = LambdaSARSA(0.10, 0.10, 0.95, actionList, initialQ, dumpCount)
+        self.agent = LambdaSARSA(0.10, 0.10, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
         self.distList = []

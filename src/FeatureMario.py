@@ -60,6 +60,8 @@ def getGridFeature(map, x, y, halfLen):
     fea = [(x, y)] #add coordinate
     for row in subMat:
         fea.append(tuple(row))
+    if len(fea) == 1:
+        return ()
     return tuple(fea)
 
 #int, int, int->listof loc
@@ -68,8 +70,8 @@ def getRegularGridShape(x, y, halfLen):
     blockLen = 2*halfLen + 1
 
     #5 by 5 large block
-    for i in range(-1, 3):
-        for j in range(-1, 3):
+    for i in range(-2, 3):
+        for j in range(-2, 3):
             locList.append((x + blockLen*i, y + blockLen*j))
             
     return locList
@@ -121,6 +123,8 @@ def getGridFeatureList(obs):
     feaList = []
     for loc in locList:
         fea = getGridFeature(map, loc[0], loc[1], halfLen)
+        if fea == ():
+            continue
         feaList.append(fea)
 
     return feaList
