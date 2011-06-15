@@ -70,8 +70,8 @@ def getRegularGridShape(x, y, halfLen):
     blockLen = 2*halfLen + 1
 
     #5 by 5 large block
-    for i in range(-2, 3):
-        for j in range(-2, 3):
+    for i in range(-1, 3):
+        for j in range(-1, 3):
             locList.append((x + blockLen*i, y + blockLen*j))
             
     return locList
@@ -107,13 +107,26 @@ def getCrossShape(x, y, halfLen):
     #locList.append(x - 2*halfLen, y)
     #locList.append(x + 2*halfLen, y)
     return locList
-        
+def getQuanVec(vec):
+    quanLevel = 0.8
+    val = 1
+    if vec == 0:
+        return 0
+    if vec > 0:
+       val = 1
+    else:
+       val = -1
+
+    return val + int(vec/quanLevel)
+
 def getGridFeatureList(obs):
     halfLen = 1
     map = getMonsterGridMap(obs)
     #print map
     #sample with cross shape
     mario = getMario(obs)
+    vx = getQuanVec(mario.sx)
+    vy = getQuanVec(mario.sy)
     #print "mario Loc: ", mario.x
     #print "mario Loc: ", mario.y
     #print "origin Loc: ", getOrigin(obs)
@@ -125,7 +138,9 @@ def getGridFeatureList(obs):
         fea = getGridFeature(map, loc[0], loc[1], halfLen)
         if fea == ():
             continue
-        feaList.append(fea)
+        #get a feature for x and another feature for y 
+        feaList.append((vx, fea))
+        feaList.append((vy, fea))
 
     return feaList
     
@@ -153,7 +168,11 @@ def getTileAt(x, y, obs):
     assert(y < MaxY)
     index = y*MaxX+x;
     tile = obs.charArray[index]
-    return ord(tile)
+    #disable coin
+    val = ord(tile)
+    if val == ord('$'):
+        return ord(' ')
+    return val
         
 def getMario(obs):
     monList = getMonsterList(obs)
@@ -268,13 +287,16 @@ def getMonsterFeatureList(obs):
     feaList = []
     monList = getBadMonster(obs) 
     mario = getMario(obs)
-    for m in monList:
+    vx = getQuanVec(mario.sx)
+    vy = getQuanVec(mario.sy)
+    #for m in monList:
         #a general one to let mario "fear" the monster
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), MonType.GeneralObj, m.winged)
-        feaList.append(fea)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), MonType.GeneralObj, m.winged)
+        #feaList.append(fea)
     for m in monList:
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), int(m.sy + 0.5), m.type, m.winged)
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), vx, m.type, m.winged)
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type, m.winged)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
     return feaList

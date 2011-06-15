@@ -258,8 +258,8 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
-    agent = LinearSarsaAgent()
+    agent = tool.Load("mario.db")
+    #agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
