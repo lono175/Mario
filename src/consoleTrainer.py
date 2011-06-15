@@ -18,6 +18,7 @@
 import rlglue.RLGlue as RLGlue
 from consoleTrainerHelper import *
 import random
+episodeList = []
 def main():
     whichTrainingMDP = 0
     # Uncomment ONE of the following lines to choose your experiment
@@ -26,7 +27,6 @@ def main():
      #loadAcrobot(whichTrainingMDP); #put the desired parameter set in where MDP is in [1,49] #0 is standard acrobot
      #loadPolyathlon(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,5]
     #typeList = [121, 122, 123, 124, 125, 41, 42, 43, 44, 45]
-    episodeList = []
     #typeList = [121]
     
     
@@ -35,14 +35,14 @@ def main():
         for diff in range(1, 3):
     #for numRun in range(0, 10):
             type = int(random.random()*10000)
-            episodeList.append(type)
+            episodeList.append((type, diff))
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
 
             # and then,
             #		just run the experiment:
             RLGlue.RL_init()
-            episodesToRun = 2000
+            episodesToRun = 1000
             totalSteps = 0
             for i in range(episodesToRun):
                 RLGlue.RL_episode(20000)
@@ -52,6 +52,9 @@ def main():
 
             print "Total steps : %d\n" % (totalSteps)
             RLGlue.RL_cleanup()
-
+def dumpEpisode():
+    print episodeList
 if __name__ == "__main__":
+    import atexit
+    atexit.register(dumpEpisode) #workaround to the NoneType error in hte descructorn
     main()
