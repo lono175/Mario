@@ -116,6 +116,7 @@ class LinearSarsaAgent(Agent):
         self.totalStep = 0
         self.rewardList = []
         self.distList = []
+        self.episodeNum = 0
         
     def agent_init(self,taskSpecString):
 
@@ -225,6 +226,11 @@ class LinearSarsaAgent(Agent):
         self.agent.end(reward)
         self.rewardList.append(reward)
         self.distList.append(self.lastMarioLoc.x)
+        self.episodeNum = self.episodeNum + 1
+        if self.episodeNum % 10000 == 0:
+            print "dump:", self.episodeNum
+            tool.Save(self, "mario" + str(self.episodeNum) + ".db")
+            
     def agent_cleanup(self):
         pass
 
@@ -258,8 +264,8 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
-    agent = LinearSarsaAgent()
+    agent = tool.Load("mario.db")
+    #agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
