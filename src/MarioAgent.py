@@ -70,7 +70,7 @@ def getAction(dir, isJump, isSpeed):
     action.numInts = 3
     action.numDoubles = 0
     action.numChars = 0
-    action.intArry = []
+    action.intArray = []
     action.doubleArray = []
     action.charArray = []
     action.intArray.append(dir)
@@ -173,9 +173,9 @@ class LinearSarsaAgent(Agent):
         #print obs.intArray
         #print reward
         #mario = self.getMario(obs)
-        #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         fea = getSarsaFeature(obs)
         mario = getMario(obs) #for internal reward system
+        print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         dx = mario.x - self.lastMarioLoc.x
         #let mario finish the level as fast as possible
         #reward = reward + dx*0.5
@@ -190,7 +190,7 @@ class LinearSarsaAgent(Agent):
         #print self.totalStep, "---------------"
         #dumpActionList(self.agent.actionList)
         #print "Q: ", self.agent.getQ(fea, action)
-        #print "action:", dumpAction(action)
+        print "action:", dumpAction(action)
         #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
         #print "monst fea: ", getMonsterFeatureList(obs)
         #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
@@ -264,8 +264,8 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     import atexit
-    agent = tool.Load("mario.db")
-    #agent = LinearSarsaAgent()
+    #agent = tool.Load("mario.db")
+    agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)

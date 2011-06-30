@@ -122,7 +122,7 @@ def getQuanVec(vec):
 def getGridFeatureList(obs):
     halfLen = 1
     map = getMonsterGridMap(obs)
-    #print map
+    print map
     #sample with cross shape
     mario = getMario(obs)
     vx = getQuanVec(mario.sx)
@@ -145,21 +145,21 @@ def getGridFeatureList(obs):
     return feaList
     
     
-    #Returns the char representing the tile at the given location.
-    #If unknown, returns 'x'.
-    #
-    #Valid tiles:
-    #M - the tile mario is currently on. there is no tile for a monster.
-    #$ - a coin
-    #b - a smashable brick
-    #? - a question block
-    #| - a pipe. gets its own tile because often there are pirahna plants
-        #in them
-    #! - the finish line
-    #And an integer in [1,7] is a 3 bit binary flag
-    #first bit is "cannot go through this tile from above"
-    #second bit is "cannot go through this tile from below"
-    #third bit is "cannot go through this tile from either side"
+#Returns the char representing the tile at the given location.
+#If unknown, returns 'x'.
+#
+#Valid tiles:
+#M - the tile mario is currently on. there is no tile for a monster.
+#$ - a coin
+#b - a smashable brick
+#? - a question block
+#| - a pipe. gets its own tile because often there are pirahna plants
+    #in them
+#! - the finish line
+#And an integer in [1,7] is a 3 bit binary flag
+#first bit is "cannot go through this tile from above"
+#second bit is "cannot go through this tile from below"
+#third bit is "cannot go through this tile from either side"
 #x, y is the relative coordinate
 def getTileAt(x, y, obs):
     assert(x >= 0)
