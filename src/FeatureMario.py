@@ -2,37 +2,64 @@ from numpy  import *
 MaxY = 16
 MaxX = 22
 class MonType:
-    Mario = 0 #good
-    RedKoopa = 1
-    GreenKoopa = 2
-    Goomba = 3
-    Spikey = 4
-    PiranhaPlant = 5
-    Mushroom = 6 #good
-    FireFlower = 7 #good
-    Fireball = 8 #good
-    Shall = 9
-    BigMario = 10 #good
-    FieryMario = 11 #good
-    GeneralObj = 12
+    Mario = ord('M') #good 0
+    RedKoopa = ord('R') #1
+    GreenKoopa = ord('G') #2
+    Goomba = ord('O') #3
+    Spikey = ord('S') #4
+    PiranhaPlant = ord('P') #5
+    Mushroom = ord('U') #good 6
+    FireFlower = ord('F') #good 7
+    Fireball = ord('B') #good 8
+    Shall = ord('H') #9
+    BigMario = ord('m') #good 10
+    FieryMario = ord('E') #good 11
+    FlyRedKoopa = ord('r') #12
+    FlyGreenKoopa = ord('g') #13
+    FlyGoomba = ord('o') #14
+    FlySpikey = ord('s') #exist? #15
+    GeneralObj = ord('Z') #16
+
 class Monster:
     def __init__(self):
         pass
+
 #for unit test
 class Observation:
     def __init__(self):
         pass
 
+def getTileAroundMario(obs, halfLen):
+    m = getMario(obs)
+    originX = getOrigin(obs)
+    return getTileBlock(obs, int(m.x - originX), int(m.y), halfLen)
+    
+#OBS, int, int, int -> list of tile and monster
+#x, y is the coordinate of screen
+def getTileBlock(obs, inX, inY, halfLen):
+    monMap = getMonsterGridMap(obs)
+    res = []
+    for y in range(-halfLen + inY, halfLen + inY + 1):
+        for x in range(-halfLen + inX, halfLen + inX + 1):
+            if not x in range(MaxX) or not y in range(MaxY):
+                tile = ord(' ')
+            else:
+                tile = monMap[y, x]
+            res.append(tile)
+    return res
+    
 def getMonsterGridMap(obs):
+
     map = zeros( (MaxY, MaxX), dtype=int )     
     for y in range(0, MaxY):
         for x in range(0, MaxX):
             map[y, x] = getTileAt(x, y, obs)
+
     #add monster
     monList = getMonsterNoMario(obs)
     #TODO: adjust coordinate here
     originX = getOrigin(obs)
-    #print "ori:", originX
+
     for m in monList:
         #print "x:", m.x
         x = int(m.x - originX)
@@ -43,6 +70,7 @@ def getMonsterGridMap(obs):
             continue
         map[y, x] = m.type
     return map
+
 def getOrigin(obs):
     return obs.intArray[0]
         
@@ -91,6 +119,7 @@ def getReducedRegularGridShape(x, y, halfLen):
             #locList.append((x + blockLen*i, y + blockLen*j))
             
     return locList
+
 def getCrossShape(x, y, halfLen):
     locList = []
     locList.append((x + halfLen, y - halfLen))
@@ -122,7 +151,6 @@ def getQuanVec(vec):
 def getGridFeatureList(obs):
     halfLen = 1
     map = getMonsterGridMap(obs)
-    print map
     #sample with cross shape
     mario = getMario(obs)
     vx = getQuanVec(mario.sx)
@@ -187,16 +215,19 @@ def isMario(m):
         #print "type: ", m.type
         return True
     return False
+
 def isGood(m):
     if m.type == MonType.Mario or m.type == MonType.BigMario or m.type == MonType.FieryMario or m.type == MonType.Mushroom or m.type == MonType.FireFlower or m.type == MonType.Fireball:
         return True
     return False
+
 def removeMario(monList):
     newList = []
     for m in monList:
         if not isMario(m):
            newList.append(m) 
     return newList
+
 def removeGoodMonster(monList):
     newList = []
     for m in monList:
@@ -208,9 +239,15 @@ def removeGoodMonster(monList):
 def getMonsterNoMario(obs):
     monList = getMonsterList(obs)
     return removeMario(monList)
+
 def getBadMonster(obs):
     monList = getMonsterList(obs)                    
     return removeGoodMonster(monList)
+
+def getMonsterTypeList():
+    monTypeList = [MonType.Mario, MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.BigMario, MonType.FieryMario, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]
+    return monTypeList
+    
 def getMonsterList(obs):
     monList = []
     for i in range(0, len(obs.intArray)):
@@ -221,23 +258,32 @@ def getMonsterList(obs):
         type = obs.intArray[i]
         winged = obs.intArray[i+1]
         m = Monster()
-        m.type = type
-        m.winged = False
-        if winged != 0:
-            m.winged = True    
+        typeList = getMonsterTypeList()
+        m.type = typeList[type]
 
-        #print "index ", i
-        #print "len ", len(obs.doubleArray)
+        if winged != 0:
+            if m.type == MonType.RedKoopa:
+                m.type = MonType.FlyRedKoopa
+
+            elif m.type == MonType.GreenKoopa:
+                m.type = MonType.FlyGreenKoopa
+
+            elif m.type == MonType.Goomba:
+                m.type == MonType.FlyGoomba
+
+            elif m.type == MonType.Spikey:
+                m.type == MonType.FlySpikey
+            else:
+                assert(False)
+
         m.x = obs.doubleArray[4*id];
-        #print "y ", obs.doubleArray[4*id+1]
-        #assert(obs.doubleArray[4*id+1] >= -1)
-        #assert(obs.doubleArray[4*id+1] < MaxY)
         m.y = MaxY - obs.doubleArray[4*id+1];
         m.sx = obs.doubleArray[4*id+2];
         m.sy = obs.doubleArray[4*id+3];
         monList.append(m)
 
     return monList
+
 #this function is buggy
 def getTileList(obs):
     assert(False) 
@@ -253,28 +299,33 @@ def getTileList(obs):
             tile = getTileAt(mario.x + dx, mario.y + dy, obs) 	#TODO	
             tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
     return tileList
+
 def getConstantQ(obs, agent):
     feaList = getConstantFeature(obs)    
     Q = agent.getAllQ(feaList)
     return Q
+
 def getTileQ(obs, agent):
     feaList = getTileList(obs)    
     Q = agent.getAllQ(feaList)
     return Q
+
 def getGridQ(obs, agent):
     feaList = getGridFeatureList(obs)    
     Q = agent.getAllQ(feaList)
     return Q
+
 def getGridQInd(obs, agent, index):
     oldfeaList = getGridFeatureList(obs)    
     fea = oldfeaList[index]
-    
     Q = agent.getAllQ([fea])
     return Q
+
 def getMonsterQ(obs, agent):
     feaList = getMonsterFeatureList(obs)
     Q = agent.getAllQ(feaList)
     return Q
+
 def getConstantFeature(obs):
     mario = getMario(obs)
     feaList = []
@@ -295,12 +346,11 @@ def getMonsterFeatureList(obs):
         #feaList.append(fea)
     for m in monList:
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), vx, m.type, m.winged)
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type, m.winged)
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), vx, m.type)
+        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
     return feaList
-    
     
 def getSarsaFeature(obs):
     feaList = []
@@ -313,6 +363,7 @@ def getSarsaFeature(obs):
     fea = getGridFeatureList(obs)
     feaList.extend(fea)
     return feaList
+
 #def getMonsterList(obs):
     #monList = []
     #for i in range(0, len(obs.intArray)):
@@ -335,6 +386,7 @@ def getSarsaFeature(obs):
         #m.sx = obs.doubleArray[4*id+2];
         #m.sy = obs.doubleArray[4*id+3];
         #monList.append(m)
+
 #------------unit test function------------------
 def addMonster(m, obs):
     obs.doubleArray.append(m.x)
@@ -363,6 +415,7 @@ def getObservation():
     m = createMushroom()
     obs = addMonster(m, obs)
     return obs
+
 def createMario():
     m = Monster()
     m.type = MonType.BigMario

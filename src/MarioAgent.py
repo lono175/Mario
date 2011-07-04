@@ -27,6 +27,7 @@ from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 from LinearSARSA import LinearSARSA
 from LambdaSARSA import LambdaSARSA
 from FeatureMario import *
+from ML import *
 import tool
 
 
@@ -35,23 +36,16 @@ import string
 MaxY = 15
 episilon = 0.005
 def saveObj(obj):
-        
     print "descructing...."
-    #print self.lastMarioLoc
-    #print self.totalStep
-    #print self.agent
-    #print self.rewardList
-    #print self.distList
-    #print "before dump3"
-    #print self
-    #print "before dump4"
-    #di = dir(self)
-    #print di
-    #obj = self
-    #for attr in di:
-        #print "obj.%s = %s" % (attr, getattr(obj, attr))
-    #dumpObj(self)
+    actionList = getAllAction()
+    initialQ = 0
+    dumpCount = 100000
+    #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
+    obj.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
     tool.Save(obj, "mario.db")
+
+    
+
 def GenPasswd():
     chars = string.letters + string.digits
     for i in range(8):
@@ -103,6 +97,10 @@ def getAllAction():
                 actionList.append(action)
     #actionList = [getAction(1, 1, 1)]
     return actionList
+def getActionId(action):
+    id = ((action.intArray[0] + 1) << 2) + ((action.intArray[1]) << 1) + (action.intArray[2])
+    return id
+
 class LinearSarsaAgent(Agent):
 
     def __init__(self):
@@ -116,55 +114,25 @@ class LinearSarsaAgent(Agent):
         self.totalStep = 0
         self.rewardList = []
         self.distList = []
+        self.feaList = []
         self.episodeNum = 0
         
-    def agent_init(self,taskSpecString):
-
-        #print taskSpecString
-        #TaskSpec = TaskSpecParser(taskSpecString);
-        #if TaskSpec.valid:
-            #print "Task spec was valid";
-        #else:
-            #print "Task Spec could not be parsed: "+taskSpecString;
-            #exit()
-
+    def agent_init(self, taskSpecString):
         ##parse action
         print "begin: ", self.totalStep
         print "Q", len(self.agent.Q)
-        #self.int_action_ranges    = TaskSpec.getIntActions()
-        #self.double_action_ranges = TaskSpec.getDoubleActions()
-        #self.action.numInts       = len(self.int_action_ranges)
-        #self.action.numDoubles    = len(self.double_action_ranges)
-        #self.action.numChars      = TaskSpec.getCharCountActions()
+        self.treeList = []
+        if self.feaList != []:
+            self.treeList = getClassifier(self.feaList)
 
-        #print "int",self.int_action_ranges,self.action.numInts 
-        #print "doubles",self.double_action_ranges,self.action.numDoubles
-        #print "chars",self.action.numChars 
-    #def __del__(self):
-        #from copy import deepcopy
-        #deepcopy(1)
-        #
-        #print "descructing...."
-        ##print self.lastMarioLoc
-        ##print self.totalStep
-        ##print self.agent
-        ##print self.rewardList
-        ##print self.distList
-        #print "before dump3"
-        #print self
-        #print "before dump4"
-        #di = dir(self)
-        #print di
-        #obj = self
-        #for attr in di:
-            #print "obj.%s = %s" % (attr, getattr(obj, attr))
-        #dumpObj(self)
-        #tool.Save(self, "mario.db")
+
     def agent_start(self,obs):
         fea = getSarsaFeature(obs)
-        self.lastMarioLoc = getMario(obs) #for internal reward system
+        self.lastMario = getMario(obs) #for internal reward system
+        self.lastObs = obs
         action = self.agent.start(fea)
         self.stepNum = 0
+        self.lastAction = action
         return action
 
     def agent_step(self, reward, obs):
@@ -175,8 +143,8 @@ class LinearSarsaAgent(Agent):
         #mario = self.getMario(obs)
         fea = getSarsaFeature(obs)
         mario = getMario(obs) #for internal reward system
-        print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
-        dx = mario.x - self.lastMarioLoc.x
+        #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
+        dx = mario.x - self.lastMario.x
         #let mario finish the level as fast as possible
         #reward = reward + dx*0.5
         #if dx < 0:
@@ -190,7 +158,7 @@ class LinearSarsaAgent(Agent):
         #print self.totalStep, "---------------"
         #dumpActionList(self.agent.actionList)
         #print "Q: ", self.agent.getQ(fea, action)
-        print "action:", dumpAction(action)
+        #print "action:", dumpAction(action)
         #print "Constant Q: ", dumpList(getConstantQ(obs, self.agent))
         #print "monst fea: ", getMonsterFeatureList(obs)
         #print "Monster Q: ", dumpList(getMonsterQ(obs, self.agent))
@@ -213,7 +181,37 @@ class LinearSarsaAgent(Agent):
 
 
         #dumpAction(action)
-        self.lastMarioLoc = mario
+
+        #get feature for classifier here
+
+
+        lastObs = self.lastObs
+        lastAction = self.lastAction
+        lastMario = self.lastMario
+        lastActionId = getActionId(lastAction)
+        tileList = getTileAroundMario(lastObs, 2)
+        assert(len(tileList) == 25)
+
+        deltaX = mario.x - (lastMario.x + lastMario.sx)
+        deltaY = mario.y - (lastMario.y + lastMario.sy)
+        
+        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
+
+        #assert(self.treeList != [])
+        if self.treeList != []:
+            pass
+            #print self.treeList
+            #print "feature: ", modelFea
+            #print "predict: ", classify(modelFea, self.treeList)
+
+            #print "test feaL ", self.feaList[0]
+            #print "test predict: ", classify(self.feaList[0], self.treeList)
+        self.feaList.append(modelFea)
+
+        self.lastObs = obs
+        self.lastAction = action
+
+        self.lastMario = mario
         self.stepNum = self.stepNum + 1
 
         return action
@@ -221,12 +219,19 @@ class LinearSarsaAgent(Agent):
     def agent_end(self,reward):
         if reward == -10.0:
             reward = -50.0
-        print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMarioLoc.x
+        print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMario.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
         self.rewardList.append(reward)
-        self.distList.append(self.lastMarioLoc.x)
+        self.distList.append(self.lastMario.x)
         self.episodeNum = self.episodeNum + 1
+
+        #print the decision tree
+        #treeList = getClassifier(self.feaList)
+        #for tree in treeList:
+        #printTree(treeList[2])
+        #res =  classify(data, treeList)
+        
         if self.episodeNum % 10000 == 0:
             print "dump:", self.episodeNum
             tool.Save(self, "mario" + str(self.episodeNum) + ".db")
