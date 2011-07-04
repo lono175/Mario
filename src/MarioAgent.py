@@ -33,6 +33,7 @@ import tool
 
 from random import choice
 import string
+
 MaxY = 15
 episilon = 0.005
 def saveObj(obj):
@@ -43,8 +44,6 @@ def saveObj(obj):
     #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
     obj.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
     tool.Save(obj, "mario.db")
-
-    
 
 def GenPasswd():
     chars = string.letters + string.digits
@@ -71,6 +70,7 @@ def getAction(dir, isJump, isSpeed):
     action.intArray.append(isJump)
     action.intArray.append(isSpeed)
     return action
+
 def dumpAction(action):
     print action.intArray[0], " ", action.intArray[1], " ", action.intArray[2]
 
@@ -78,16 +78,19 @@ def dumpActionList(actionList):
     for action in actionList:
         print (action.intArray[0], action.intArray[1], action.intArray[2]),
     print ""
+
 def dumpList(list):
     for item in list:
         print '%02.3f'%item, " ",
     print " "
+
 def dumpObj(obj):
     print "dump4...."
     print dir(obj) 
     print "dump4...."
     for attr in dir(obj):
         print "obj.%s = %s" % (attr, getattr(obj, attr))
+
 def getAllAction():
     actionList = []
     for dir in [-1, 0, 1]:
@@ -97,6 +100,7 @@ def getAllAction():
                 actionList.append(action)
     #actionList = [getAction(1, 1, 1)]
     return actionList
+
 def getActionId(action):
     id = ((action.intArray[0] + 1) << 2) + ((action.intArray[1]) << 1) + (action.intArray[2])
     return id

@@ -1,0 +1,7 @@
+from FeatureMario import *
+from ML import *
+from MarioAgent import *
+import tool
+
+agent = tool.Load('mario.db')
+treeList = getClassifier(agent.feaList)
