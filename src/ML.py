@@ -42,7 +42,10 @@ def printTree(x):
     else:
         raise TypeError, "invalid parameter"
 ActionRange = range(12)
+#SpeedRange = range(-2, 3)
+#DeltaRange = range(-4, 5)
 
+FeatureNum = 28
 
 #[-1, 1, 1] + [ord(' ') for x in range(25)] + [1, 1, 1, 1]
 #def convertData(data):
@@ -63,24 +66,33 @@ def getClassVar():
     classVarList.append(var)
     var = orange.FloatVariable("delta-y")
     classVarList.append(var)
+    #var = orange.FloatVariable("reward")
+    #classVarList.append(var)
     return classVarList
-    
+
+def getDomainList():
+    commonDomain = getCommonDomain()
+    classVarList = getClassVar()
+    domainList = []
+    for classVar in classVarList:
+        domain = orange.Domain(commonDomain, classVar)
+        domainList.append(domain)
+    reward = orange.FloatVariable("reward")
+    rewardDomain = orange.Domain(commonDomain, reward)
+    return domainList, rewardDomain
+
+def getRewardClassifier(data, rewardDomain):
+
 # 3 + 25 + 4 classes= 32 
 #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
-def getClassifier(data):
-    assert(len(data) > 0)
-    inputNum = len(data[0])
-    classNum = inputNum - FeatureNum
-    classVarList = getClassVar()
-    assert(classNum == len(classVarList))
-
-    commonDomain = getDomain()
+def getClassifier(data, domainList):
     dataList = []
-    for i in range(classNum):
-        domain = orange.Domain(commonDomain, classVarList[i])
+    i = 0
+    for domain in domainList:
         partData = [(data[x][:FeatureNum] + [data[x][FeatureNum+i]]) for x in range(len(data))]
         table = orange.ExampleTable(domain, partData)
         dataList.append(table)
+        i = i + 1
 
         #tree = orange.TreeLearner(table)
         #treeList.append(tree)
@@ -96,14 +108,10 @@ def getClassifier(data):
         #classifier = tunedTree(data)
         classifier = orngTree.TreeLearner(data)
         treeList.append(classifier)
-
-
     return treeList
     
-def getDomainList():
-    FeatureNum = 28
-
-    tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7']
+def getCommonDomain():
+    tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7', 'w']
     monTypeList = [ chr(type) for type in [MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]]
 
     tileList = tileList + monTypeList
@@ -118,17 +126,8 @@ def getDomainList():
     for x in range(25):
         var = orange.EnumVariable("obs%i"%x, values = tileList)
         domain.append(var)
-    commonDomain = orange.Domain(domain)
-
-    classVarList = getClassVar()
-    classNum = len(classVarList)
-
-    domainList = []
-    for i in range(classNum):
-        domain = orange.Domain(commonDomain, classVarList[i])
-        domainList.append(domain)
-
-    return domainList
+    d = orange.Domain(domain)
+    return d
 
 def toExample(data, i):
     commonDomain = getDomain()
@@ -137,13 +136,9 @@ def toExample(data, i):
     example = orange.Example(domain, data)
     return example
     
-def classify(data, treeList):
-    inputNum = len(data)
-    classNum = inputNum - FeatureNum
-    classVarList = getClassVar()
-    commonDomain = getDomain()
-    domain = [orange.Domain(commonDomain, classVarList[i] ) for i in range(classNum)]
-    partData = [orange.Example(domain[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
+def classify(data, treeList, domainList):
+    classNum = len(domainList)
+    partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
     res = [treeList[i](partData[i]).value for i in range(classNum)]
     return res
 
