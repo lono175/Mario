@@ -121,8 +121,7 @@ class LinearSarsaAgent(Agent):
         self.feaList = []
         self.rewardFeaList = []
         self.episodeNum = 0
-        self.domainList = getDomainList()
-        self.rewardDomain = 
+        self.domainList, self.rewardDomain = getDomainList()
         
     def agent_init(self, taskSpecString):
 
@@ -132,8 +131,12 @@ class LinearSarsaAgent(Agent):
 
         #retrain the classifier for each different run
         self.treeList = []
+        self.rewardTreeList = []
         if self.feaList != []:
             self.treeList = getClassifier(self.feaList, self.domainList)
+        if self.rewardFeaList != []:
+            self.rewardTreeList = [getRewardClassifier(self.rewardFeaList, self.rewardDomain)]
+
 
 
     def agent_start(self,obs):
@@ -204,17 +207,22 @@ class LinearSarsaAgent(Agent):
         deltaY = mario.y - (lastMario.y + lastMario.sy)
         
         modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), round(reward, 1)]
+        rewardFea = toRewardFea(modelFea, len(self.domainList))
 
         #assert(self.treeList != [])
         if self.treeList != []:
-            #pass
+            pass
             #print self.treeList
-            print "feature: ", modelFea
-            print "predict: ", classify(modelFea, self.treeList, self.domainList)
+            #print "feature: ", modelFea
+            #print "predict: ", classify(modelFea, self.treeList, self.domainList)
+            #print "reward: ", reward
+        #if self.rewardTreeList != []:
+            #print "predict reward: ",  classifyRewardDomain(rewardFea, self.rewardTreeList[0], self.rewardDomain)
 
             #print "test feaL ", self.feaList[0]
             #print "test predict: ", classify(self.feaList[0], self.treeList, self.domainList)
         self.feaList.append(modelFea)
+        self.rewardFeaList.append(rewardFea)
 
         self.lastObs = obs
         self.lastAction = action
@@ -227,7 +235,18 @@ class LinearSarsaAgent(Agent):
     def agent_end(self,reward):
         if reward == -10.0:
             reward = -50.0
-        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), round(reward, 1)]
+
+        lastObs = self.lastObs
+        lastAction = self.lastAction
+        lastMario = self.lastMario
+        lastActionId = getActionId(lastAction)
+        tileList = getTileAroundMario(lastObs, 2)
+        assert(len(tileList) == 25)
+        rewardFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(reward, 1)]
+        self.rewardFeaList.append(rewardFea)
+        if self.rewardTreeList != []:
+            print "predict reward: ",  classifyRewardDomain(rewardFea, self.rewardTreeList[0], self.rewardDomain)
+
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMario.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
@@ -278,8 +297,8 @@ class LinearSarsaAgent(Agent):
 
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
-    agent = LinearSarsaAgent()
+    agent = tool.Load("mario.db")
+    #agent = LinearSarsaAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)

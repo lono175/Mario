@@ -25,12 +25,12 @@ def addGoalLoc(objLoc, goal):
     return newObjLoc
 
 def Save(agent, filename): 
-    import pickle
+    import cPickle
     output = open(filename, 'wb')
-    pickle.dump(agent, output)
+    cPickle.dump(agent, output)
     output.close()
 
 def Load(filename):
-    import pickle
+    import cPickle
     input = open(filename, 'rb')
-    return pickle.load(input)
+    return cPickle.load(input)

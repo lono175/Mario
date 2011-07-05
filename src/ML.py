@@ -82,6 +82,11 @@ def getDomainList():
     return domainList, rewardDomain
 
 def getRewardClassifier(data, rewardDomain):
+    partData = [(data[x]) for x in range(len(data))]
+    table = orange.ExampleTable(rewardDomain, partData)
+    classifier = orngTree.TreeLearner(table)
+    return classifier
+
 
 # 3 + 25 + 4 classes= 32 
 #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
@@ -135,7 +140,15 @@ def toExample(data, i):
     print domain
     example = orange.Example(domain, data)
     return example
-    
+def toRewardFea(data, loc):
+    partData = data[:FeatureNum] + [data[FeatureNum+loc]]
+    return partData
+        
+def classifyRewardDomain(data, rewardTree, rewardDomain):
+    partData = orange.Example(rewardDomain, data)
+    res = rewardTree(partData).value
+    return res
+
 def classify(data, treeList, domainList):
     classNum = len(domainList)
     partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
