@@ -42,7 +42,7 @@ def getTileBlock(obs, inX, inY, halfLen):
     for y in range(-halfLen + inY, halfLen + inY + 1):
         for x in range(-halfLen + inX, halfLen + inX + 1):
             if not x in range(MaxX) or not y in range(MaxY):
-                tile = ord(' ')
+                tile = ord('w') #the end of the world
             else:
                 tile = monMap[y, x]
             res.append(tile)

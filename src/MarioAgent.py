@@ -115,15 +115,21 @@ class LinearSarsaAgent(Agent):
         self.rewardList = []
         self.distList = []
         self.feaList = []
+        self.rewardFeaList = []
         self.episodeNum = 0
+        self.domainList = getDomainList()
+        self.rewardDomain = 
         
     def agent_init(self, taskSpecString):
-        ##parse action
+
+        #parse action
         print "begin: ", self.totalStep
         print "Q", len(self.agent.Q)
+
+        #retrain the classifier for each different run
         self.treeList = []
         if self.feaList != []:
-            self.treeList = getClassifier(self.feaList)
+            self.treeList = getClassifier(self.feaList, self.domainList)
 
 
     def agent_start(self,obs):
@@ -183,8 +189,6 @@ class LinearSarsaAgent(Agent):
         #dumpAction(action)
 
         #get feature for classifier here
-
-
         lastObs = self.lastObs
         lastAction = self.lastAction
         lastMario = self.lastMario
@@ -195,17 +199,17 @@ class LinearSarsaAgent(Agent):
         deltaX = mario.x - (lastMario.x + lastMario.sx)
         deltaY = mario.y - (lastMario.y + lastMario.sy)
         
-        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
+        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), round(reward, 1)]
 
         #assert(self.treeList != [])
         if self.treeList != []:
-            pass
+            #pass
             #print self.treeList
-            #print "feature: ", modelFea
-            #print "predict: ", classify(modelFea, self.treeList)
+            print "feature: ", modelFea
+            print "predict: ", classify(modelFea, self.treeList, self.domainList)
 
             #print "test feaL ", self.feaList[0]
-            #print "test predict: ", classify(self.feaList[0], self.treeList)
+            #print "test predict: ", classify(self.feaList[0], self.treeList, self.domainList)
         self.feaList.append(modelFea)
 
         self.lastObs = obs
@@ -219,6 +223,7 @@ class LinearSarsaAgent(Agent):
     def agent_end(self,reward):
         if reward == -10.0:
             reward = -50.0
+        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), round(reward, 1)]
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastMario.x
         self.totalStep = self.totalStep + self.stepNum
         self.agent.end(reward)
@@ -258,7 +263,7 @@ class LinearSarsaAgent(Agent):
             act = random.uniform(min_action,max_action)
             self.action.doubleArray.append(act)
 
-        self.action.charArray   = GenPasswd2(self.action.numChars)
+        self.action.charArray = GenPasswd2(self.action.numChars)
         #print self.action.intArray
         #print self.action.doubleArray
         #print self.action.charArray
