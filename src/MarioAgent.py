@@ -206,7 +206,7 @@ class LinearSarsaAgent(Agent):
         deltaX = mario.x - (lastMario.x + lastMario.sx)
         deltaY = mario.y - (lastMario.y + lastMario.sy)
         
-        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), round(reward, 1)]
+        modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), 0] #don't learn the pseudo reward
         rewardFea = toRewardFea(modelFea, len(self.domainList))
 
         #assert(self.treeList != [])
