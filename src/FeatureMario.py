@@ -1,6 +1,5 @@
 from numpy  import *
-MaxY = 16
-MaxX = 22
+
 class MonType:
     Mario = ord('M') #good 0
     RedKoopa = ord('R') #1
@@ -29,15 +28,14 @@ class Observation:
     def __init__(self):
         pass
 
-def getTileAroundMario(obs, halfLen):
-    m = getMario(obs)
-    originX = getOrigin(obs)
-    return getTileBlock(obs, int(m.x - originX), int(m.y), halfLen)
+def getTileAroundMario(state, halfLen):
+    m = state.mario
+    originX = state.origin
+    return getTileBlock(state.gridMap, int(m.x - originX), int(m.y), halfLen)
     
 #OBS, int, int, int -> list of tile and monster
 #x, y is the coordinate of screen
-def getTileBlock(obs, inX, inY, halfLen):
-    monMap = getMonsterGridMap(obs)
+def getTileBlock(monMap, inX, inY, halfLen):
     res = []
     for y in range(-halfLen + inY, halfLen + inY + 1):
         for x in range(-halfLen + inX, halfLen + inX + 1):
@@ -47,33 +45,7 @@ def getTileBlock(obs, inX, inY, halfLen):
                 tile = monMap[y, x]
             res.append(tile)
     return res
-    
-def getMonsterGridMap(obs):
 
-    map = zeros( (MaxY, MaxX), dtype=int )     
-    for y in range(0, MaxY):
-        for x in range(0, MaxX):
-            map[y, x] = getTileAt(x, y, obs)
-
-    #add monster
-    monList = getMonsterNoMario(obs)
-    #TODO: adjust coordinate here
-    originX = getOrigin(obs)
-
-    for m in monList:
-        #print "x:", m.x
-        x = int(m.x - originX)
-        y = int(m.y)
-        if x >= MaxX:
-            continue
-        if y >= MaxY:
-            continue
-        map[y, x] = m.type
-    return map
-
-def getOrigin(obs):
-    return obs.intArray[0]
-        
 def getGridFeature(map, x, y, halfLen):
     #print x
     #print y
@@ -136,6 +108,7 @@ def getCrossShape(x, y, halfLen):
     #locList.append(x - 2*halfLen, y)
     #locList.append(x + 2*halfLen, y)
     return locList
+
 def getQuanVec(vec):
     quanLevel = 0.8
     val = 1
@@ -171,134 +144,6 @@ def getGridFeatureList(obs):
         feaList.append((vy, fea))
 
     return feaList
-    
-    
-#Returns the char representing the tile at the given location.
-#If unknown, returns 'x'.
-#
-#Valid tiles:
-#M - the tile mario is currently on. there is no tile for a monster.
-#$ - a coin
-#b - a smashable brick
-#? - a question block
-#| - a pipe. gets its own tile because often there are pirahna plants
-    #in them
-#! - the finish line
-#And an integer in [1,7] is a 3 bit binary flag
-#first bit is "cannot go through this tile from above"
-#second bit is "cannot go through this tile from below"
-#third bit is "cannot go through this tile from either side"
-#x, y is the relative coordinate
-def getTileAt(x, y, obs):
-    assert(x >= 0)
-    assert(x < MaxX)
-    assert(y >= 0)
-    assert(y < MaxY)
-    index = y*MaxX+x;
-    tile = obs.charArray[index]
-    #disable coin
-    val = ord(tile)
-    if val == ord('$'):
-        return ord(' ')
-    return val
-        
-def getMario(obs):
-    monList = getMonsterList(obs)
-    for m in monList:
-        if isMario(m):
-            #print "type: ", m.type
-            return m
-    assert(False)
-
-def isMario(m):
-    if m.type == MonType.Mario or m.type == MonType.BigMario or m.type == MonType.FieryMario:
-        #print "type: ", m.type
-        return True
-    return False
-
-def isGood(m):
-    if m.type == MonType.Mario or m.type == MonType.BigMario or m.type == MonType.FieryMario or m.type == MonType.Mushroom or m.type == MonType.FireFlower or m.type == MonType.Fireball:
-        return True
-    return False
-
-def removeMario(monList):
-    newList = []
-    for m in monList:
-        if not isMario(m):
-           newList.append(m) 
-    return newList
-
-def removeGoodMonster(monList):
-    newList = []
-    for m in monList:
-        if isGood(m):
-            continue
-        newList.append(m)
-    return newList
-        
-def getMonsterNoMario(obs):
-    monList = getMonsterList(obs)
-    return removeMario(monList)
-
-def getBadMonster(obs):
-    monList = getMonsterList(obs)                    
-    return removeGoodMonster(monList)
-
-def getMonsterTypeList():
-    monTypeList = [MonType.Mario, MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.BigMario, MonType.FieryMario, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]
-    return monTypeList
-    
-def getMonsterList(obs):
-    monList = []
-    for i in range(0, len(obs.intArray)):
-        if i % 2 == 0:
-           continue 
-
-        id = i / 2
-        type = obs.intArray[i]
-        winged = obs.intArray[i+1]
-        m = Monster()
-        typeList = getMonsterTypeList()
-        m.type = typeList[type]
-
-        if winged != 0:
-            if m.type == MonType.RedKoopa:
-                m.type = MonType.FlyRedKoopa
-
-            elif m.type == MonType.GreenKoopa:
-                m.type = MonType.FlyGreenKoopa
-
-            elif m.type == MonType.Goomba:
-                m.type == MonType.FlyGoomba
-
-            elif m.type == MonType.Spikey:
-                m.type == MonType.FlySpikey
-            else:
-                assert(False)
-
-        m.x = obs.doubleArray[4*id];
-        m.y = MaxY - obs.doubleArray[4*id+1];
-        m.sx = obs.doubleArray[4*id+2];
-        m.sy = obs.doubleArray[4*id+3];
-        monList.append(m)
-
-    return monList
-
-#this function is buggy
-def getTileList(obs):
-    assert(False) 
-    tileList = []
-    mario = getMario(obs)
-    mario.x = int(mario.x)
-    mario.y = int(mario.y)
-    offset = -(MaxY - mario.y)
-    #for dy in range(offset, 5):
-        #for dx in range(0, 7):
-    for dy in range(-2, 3):
-        for dx in range(0, 3):
-            tile = getTileAt(mario.x + dx, mario.y + dy, obs) 	#TODO	
-            tileList.append((dx, dy, tile)) #use absolute location for y to detect pit (always at (x, 0))
-    return tileList
 
 def getConstantQ(obs, agent):
     feaList = getConstantFeature(obs)    
