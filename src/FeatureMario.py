@@ -1,33 +1,5 @@
 from numpy  import *
-
-class MonType:
-    Mario = ord('M') #good 0
-    RedKoopa = ord('R') #1
-    GreenKoopa = ord('G') #2
-    Goomba = ord('O') #3
-    Spikey = ord('S') #4
-    PiranhaPlant = ord('P') #5
-    Mushroom = ord('U') #good 6
-    FireFlower = ord('F') #good 7
-    Fireball = ord('B') #good 8
-    Shall = ord('H') #9
-    BigMario = ord('m') #good 10
-    FieryMario = ord('E') #good 11
-    FlyRedKoopa = ord('r') #12
-    FlyGreenKoopa = ord('g') #13
-    FlyGoomba = ord('o') #14
-    FlySpikey = ord('s') #exist? #15
-    GeneralObj = ord('Z') #16
-
-class Monster:
-    def __init__(self):
-        pass
-
-#for unit test
-class Observation:
-    def __init__(self):
-        pass
-
+from Def    import MonType
 def getTileAroundMario(state, halfLen):
     m = state.mario
     originX = state.origin
@@ -209,30 +181,11 @@ def getSarsaFeature(obs):
     feaList.extend(fea)
     return feaList
 
-#def getMonsterList(obs):
-    #monList = []
-    #for i in range(0, len(obs.intArray)):
-        #if i % 2 == 0:
-           #continue 
-
-        #id = i / 2
-        #type = obs.intArray[i]
-        #winged = obs.intArray[i+1]
-        #m = Monster()
-        #m.type = type
-        #m.winged = False
-        #if winged != 0:
-            #m.winged = True    
-
-        ##print "index ", i
-        ##print "len ", len(obs.doubleArray)
-        #m.x = obs.doubleArray[4*id];
-        #m.y = obs.doubleArray[4*id+1];
-        #m.sx = obs.doubleArray[4*id+2];
-        #m.sy = obs.doubleArray[4*id+3];
-        #monList.append(m)
-
 #------------unit test function------------------
+class Observation:
+    def __init__(self):
+        pass
+
 def addMonster(m, obs):
     obs.doubleArray.append(m.x)
     obs.doubleArray.append(m.y)
@@ -270,6 +223,7 @@ def createMario():
     m.sx = 42.0
     m.sy = 43.0
     return m
+
 def createMushroom():
     m = Monster()
     m.type = MonType.Mushroom

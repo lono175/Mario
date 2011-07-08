@@ -5,6 +5,56 @@ import orange, random
 import orngWrap, orngTree
 from FeatureMario import MonType
 
+class Learner:
+    """A wrapper object to all machine learner"""
+    def __init__(self, commonVar, classVar, isSeparateAction):
+        #self.domain = orange.Domain(commonDomain, classDomain)
+        self.domainList = []
+        for classVar in classVarList:
+            domain = orange.Domain(commonVar, classVar)
+            self.domainList.append(domain)
+        self.classNum = len(classDomain)
+        self.treeList = []
+
+    def add(self, dataList):
+        if self.feaList != []:
+            self.treeList = getClassifier(dataList, self.domainList)
+
+    def getClass(self, data):
+        assert(self.treeList != [])
+        FeatureNum = len(data[0]) - self.classNum
+        partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(self.classNum)]
+        res = [treeList[i](partData[i]).value for i in range(self.classNum)]
+        return res
+
+    def empty(self):
+        return self.treeList == []
+
+def getTestFeature(state, actionId):
+    mario = state.mario
+    tileList = getTileAroundMario(state, 2)
+    assert(len(tileList) == 25)
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+
+def getTrainFeature(state, classValueList, actionId):
+    mario = state.mario
+    tileList = getTileAroundMario(state, 2)
+    assert(len(tileList) == 25)
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + [classValueList]
+     
+        
+#def classifyRewardDomain(data, rewardTree, rewardDomain):
+    #partData = orange.Example(rewardDomain, data)
+    #res = rewardTree(partData).value
+    #return res
+
+#def classify(data, treeList, domainList):
+    #classNum = len(domainList)
+    #partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
+    #res = [treeList[i](partData[i]).value for i in range(classNum)]
+    #return res
+        
+
 def treeSize(node):
     if not node:
         return 0
@@ -55,7 +105,6 @@ FeatureNum = 28
         #newData.append(newFormat)
     #return newData
 
-
 def getClassVar():
     classVarList = []
     var = orange.FloatVariable("new-x-speed")
@@ -70,22 +119,22 @@ def getClassVar():
     #classVarList.append(var)
     return classVarList
 
-def getDomainList():
-    commonDomain = getCommonDomain()
-    classVarList = getClassVar()
-    domainList = []
-    for classVar in classVarList:
-        domain = orange.Domain(commonDomain, classVar)
-        domainList.append(domain)
-    reward = orange.FloatVariable("reward")
-    rewardDomain = orange.Domain(commonDomain, reward)
-    return domainList, rewardDomain
+#def getDomainList():
+    #commonDomain = getCommonDomain()
+    #classVarList = getClassVar()
+    #domainList = []
+    #for classVar in classVarList:
+        #domain = orange.Domain(commonDomain, classVar)
+        #domainList.append(domain)
+    #reward = orange.FloatVariable("reward")
+    #rewardDomain = orange.Domain(commonDomain, reward)
+    #return domainList, rewardDomain
 
-def getRewardClassifier(data, rewardDomain):
-    partData = [(data[x]) for x in range(len(data))]
-    table = orange.ExampleTable(rewardDomain, partData)
-    classifier = orngTree.TreeLearner(table)
-    return classifier
+#def getRewardClassifier(data, rewardDomain):
+    #partData = [(data[x]) for x in range(len(data))]
+    #table = orange.ExampleTable(rewardDomain, partData)
+    #classifier = orngTree.TreeLearner(table)
+    #return classifier
 
 
 # 3 + 25 + 4 classes= 32 
@@ -115,7 +164,7 @@ def getClassifier(data, domainList):
         treeList.append(classifier)
     return treeList
     
-def getCommonDomain():
+def getCommonVar():
     tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7', 'w']
     monTypeList = [ chr(type) for type in [MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]]
 
@@ -131,8 +180,7 @@ def getCommonDomain():
     for x in range(25):
         var = orange.EnumVariable("obs%i"%x, values = tileList)
         domain.append(var)
-    d = orange.Domain(domain)
-    return d
+    return domain
 
 def toExample(data, i):
     commonDomain = getDomain()
@@ -140,20 +188,10 @@ def toExample(data, i):
     print domain
     example = orange.Example(domain, data)
     return example
-def toRewardFea(data, loc):
-    partData = data[:FeatureNum] + [data[FeatureNum+loc]]
-    return partData
+#def toRewardFea(data, loc):
+    #partData = data[:FeatureNum] + [data[FeatureNum+loc]]
+    #return partData
         
-def classifyRewardDomain(data, rewardTree, rewardDomain):
-    partData = orange.Example(rewardDomain, data)
-    res = rewardTree(partData).value
-    return res
-
-def classify(data, treeList, domainList):
-    classNum = len(domainList)
-    partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
-    res = [treeList[i](partData[i]).value for i in range(classNum)]
-    return res
 
 import numpy
 if __name__ == '__main__':

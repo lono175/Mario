@@ -1,16 +1,15 @@
-MaxY = 16
-MaxX = 22
+from Def    import *
+from numpy  import *
 class WorldState():
     #mario
     #monsterList (no mario)
     #gridMap (no mario loc)
     #expected reward for the current world state (real reward and A* reward)
-    def __init__(obs):
+    def __init__(self, obs):
         self.mario = getMario(obs)
         self.origin = getOrigin(obs)
         self.gridMap = getMonsterGridMap(obs)
         self.monsterList = getMonsterNoMario(obs)
-
 
 def getOrigin(obs):
     return obs.intArray[0]
@@ -59,6 +58,7 @@ def getMonsterList(obs):
 
     return monList
 
+#gridMap should remove mario
 def getMonsterGridMap(obs):
 
     map = zeros( (MaxY, MaxX), dtype=int )     
@@ -155,3 +155,18 @@ def getBadMonster(obs):
 def getMonsterTypeList():
     monTypeList = [MonType.Mario, MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.BigMario, MonType.FieryMario, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]
     return monTypeList
+
+#------------unit test function------------------
+from Test import getDummyObservation
+def Test():
+    obs = getDummyObservation()
+    assert(getOrigin(obs) == 40)
+    badList = getBadMonster(obs)
+    map =  getMonsterGridMap(obs)
+    print map
+
+    world = WorldState(obs)
+    
+if __name__ == '__main__':
+    Test()
+    
