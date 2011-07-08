@@ -4,44 +4,32 @@
 import orange, random
 import orngWrap, orngTree
 from FeatureMario import MonType
-
 class Learner:
     """A wrapper object to all machine learner"""
-    def __init__(self, commonVar, classVar, isSeparateAction):
+    def __init__(self, commonVar, classVarList, isSeparateAction):
         #self.domain = orange.Domain(commonDomain, classDomain)
         self.domainList = []
         self.commonDomain = orange.Domain(commonVar)
         for classVar in classVarList:
             domain = orange.Domain(commonVar, classVar)
             self.domainList.append(domain)
-        self.classNum = len(classDomain)
+        self.classNum = len(classVarList)
         self.feaNum = len(commonVar)
         self.treeList = []
 
     def add(self, dataList):
-        if self.feaList != []:
+        if dataList != []:
             self.treeList = getClassifier(dataList, self.domainList)
 
     def getClass(self, data):
         assert(self.treeList != [])
-        partData = [orange.Example(commonDomain, data[:FeatureNum])]
-        res = [treeList[i](partData).value for i in range(self.classNum)]
+        partData = orange.Example(self.commonDomain, data[:FeatureNum])
+        res = [self.treeList[i](partData).value for i in range(self.classNum)]
         return res
 
     def empty(self):
         return self.treeList == []
 
-def getTestFeature(state, actionId):
-    mario = state.mario
-    tileList = getTileAroundMario(state, 2)
-    assert(len(tileList) == 25)
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
-
-def getTrainFeature(state, classValueList, actionId):
-    mario = state.mario
-    tileList = getTileAroundMario(state, 2)
-    assert(len(tileList) == 25)
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + [classValueList]
      
         
 #def classifyRewardDomain(data, rewardTree, rewardDomain):

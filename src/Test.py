@@ -39,8 +39,8 @@ def createMario():
     m.winged = False
     m.x = 55
     m.y = 2
-    m.sx = 42.0
-    m.sy = 43.0
+    m.sx = 2.0
+    m.sy = 1.0
     return m
 
 def createMushroom():

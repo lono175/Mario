@@ -1,5 +1,20 @@
-from numpy  import *
-from Def    import MonType
+#from numpy  import *
+from Def    import MonType, MaxX, MaxY
+
+def getTestFeature(state, actionId):
+    mario = state.mario
+    tileList = getTileAroundMario(state, 2)
+    assert(len(tileList) == 25)
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    return fea
+
+def getTrainFeature(state, classValueList, actionId):
+    mario = state.mario
+    tileList = getTileAroundMario(state, 2)
+    assert(len(tileList) == 25)
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    return fea
+
 def getTileAroundMario(state, halfLen):
     m = state.mario
     originX = state.origin

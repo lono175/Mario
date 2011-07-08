@@ -126,9 +126,9 @@ class LinearSarsaAgent(Agent):
         classVarList = getClassVar()
         rewardVar = orange.FloatVariable("reward")
         isSeparateAction = True
-        self.DynamicLearner = ML.Learner(commonVar, classVarList, isSeparateAction)
+        self.DynamicLearner = Learner(commonVar, classVarList, isSeparateAction)
         isSeparateAction = False
-        self.RewardLearner = ML.Learner(commonVar, [rewardVar],isSeparateAction)
+        self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
         
     def agent_init(self, taskSpecString):
 

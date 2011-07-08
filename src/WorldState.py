@@ -1,5 +1,5 @@
 from Def    import *
-from numpy  import *
+from numpy  import zeros
 class WorldState():
     #mario
     #monsterList (no mario)
