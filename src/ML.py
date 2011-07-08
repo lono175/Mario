@@ -10,10 +10,12 @@ class Learner:
     def __init__(self, commonVar, classVar, isSeparateAction):
         #self.domain = orange.Domain(commonDomain, classDomain)
         self.domainList = []
+        self.commonDomain = orange.Domain(commonVar)
         for classVar in classVarList:
             domain = orange.Domain(commonVar, classVar)
             self.domainList.append(domain)
         self.classNum = len(classDomain)
+        self.feaNum = len(commonVar)
         self.treeList = []
 
     def add(self, dataList):
@@ -22,9 +24,8 @@ class Learner:
 
     def getClass(self, data):
         assert(self.treeList != [])
-        FeatureNum = len(data[0]) - self.classNum
-        partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(self.classNum)]
-        res = [treeList[i](partData[i]).value for i in range(self.classNum)]
+        partData = [orange.Example(commonDomain, data[:FeatureNum])]
+        res = [treeList[i](partData).value for i in range(self.classNum)]
         return res
 
     def empty(self):

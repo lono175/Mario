@@ -34,10 +34,10 @@ def Expand(state, dynaLearner, rewardLearner):
     newStateList = []
     ActionRange = range(12)
     for actionId in ActionRange:
-        fea = getModelFeature(actionId, state)
+        fea = getTestFeature(state, actionId)
         m = state.mario
         sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
-        reward = rewardLearner.getClass(fea)
+        reward, = rewardLearner.getClass(fea)
 
         newMario = copy.copy(m)
         newMario.x = m.x + m.sx + dx
