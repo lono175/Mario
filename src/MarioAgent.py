@@ -39,6 +39,8 @@ def saveObj(obj):
     #dumpCount = 100000
     #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
     #obj.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
+    obj.DynamicLearner = []
+    obj.RewardLearner = []
     tool.Save(obj, "mario.db")
 
 def GenPasswd():

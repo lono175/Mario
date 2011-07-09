@@ -43,6 +43,15 @@ class ModelAgent(Agent):
         #parse action
         print "begin: ", self.totalStep
         print "feaNum", len(self.feaList)
+        
+        if self.DynamicLearner == []:
+            commonVar = getCommonVar()
+            classVarList = getClassVar()
+            rewardVar = orange.FloatVariable("reward")
+            isSeparateAction = True
+            self.DynamicLearner = Learner(commonVar, classVarList, isSeparateAction)
+            isSeparateAction = False
+            self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
 
         #retrain the classifier for each different run
         self.DynamicLearner.add(self.feaList)
@@ -76,6 +85,7 @@ class ModelAgent(Agent):
             action = self.agent.step(reward, fea)
         else:
             action = self.planning(state)
+            print "planning", action
 
         lastActionId = getActionId(self.lastAction)
 
@@ -91,6 +101,7 @@ class ModelAgent(Agent):
         if not self.RewardLearner.empty():
             print "reward: ", reward
             preReward, = self.RewardLearner.getClass(rewardFea)
+            print "pre reward: ", preReward
 
         #assert(self.treeList != [])
         #if self.treeList != []:
@@ -122,8 +133,10 @@ class ModelAgent(Agent):
         rewardFea = getTrainFeature(self.lastState, [round(reward, 1)], lastActionId) #don't learn the pseudo reward
 
         self.rewardFeaList.append(rewardFea)
-        #if self.rewardTreeList != []:
-            #print "predict reward: ",  classifyRewardDomain(rewardFea, self.rewardTreeList[0], self.rewardDomain)
+
+        if not self.RewardLearner.empty():
+            preReward, = self.RewardLearner.getClass(rewardFea)
+            print "pre reward: ", reward
 
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastState.mario.x
         self.totalStep = self.totalStep + self.stepNum

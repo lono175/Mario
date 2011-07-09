@@ -1,5 +1,6 @@
 from Def    import *
 from numpy  import zeros
+import copy
 class WorldState():
     #mario
     #monsterList (no mario)
@@ -10,6 +11,23 @@ class WorldState():
         self.origin = getOrigin(obs)
         self.gridMap = getMonsterGridMap(obs)
         self.monsterList = getMonsterNoMario(obs)
+
+    def dump(self):
+        map = copy.copy(self.gridMap)
+        #remove mario
+        mario = self.mario
+        x = int(mario.x - self.origin)
+        y = int(mario.y)
+        if not x in range(MaxX) or not y in range(MaxY):
+            print "out of boundary:", mario.x, " ", mario.y
+        else:
+            map[y, x] = ord('M')
+
+        for y in range(len( map )):
+            for x in range(len(map[y])):
+                a = int(map[y, x])
+                print chr(a),
+            print ""
 
 def getOrigin(obs):
     return obs.intArray[0]
@@ -73,7 +91,10 @@ def getMonsterGridMap(obs):
     mario = getMario(obs)
     x = int(mario.x - originX)
     y = int(mario.y)
-    map[y, x] = ord(' ')
+    if not x in range(MaxX) or not y in range(MaxY):
+        print "out of boundary:", mario.x, " ", mario.y
+    else:
+        map[y, x] = ord(' ')
 
     #add monster
     monList = getMonsterNoMario(obs)
@@ -160,12 +181,13 @@ def getMonsterTypeList():
 from Test import getDummyObservation
 def Test():
     obs = getDummyObservation()
-    assert(getOrigin(obs) == 40)
-    badList = getBadMonster(obs)
-    map =  getMonsterGridMap(obs)
-    print map
+    #assert(getOrigin(obs) == 40)
+    #badList = getBadMonster(obs)
+    #map =  getMonsterGridMap(obs)
+    #print map
 
     world = WorldState(obs)
+    world.dump()
     
 if __name__ == '__main__':
     Test()

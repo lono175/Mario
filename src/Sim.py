@@ -21,15 +21,17 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
         #compute the expected A* reward
         for state in stateList:
             AStarReward = state.reward + state.mario.x - initState.mario.x
-            if AStarReward >= MaxDist:
-                #stop when MaxNode reached or find the optimal path (the average reward > MaxDist) 
-                return state.path
-            else:
-                heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
+            heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
         #remove a node and expand it
-        curState = heappop(nodeList)[1]
-        print "expand ", curState.path
+        AStarReward, curState = heappop(nodeList)
+        if AStarReward >= MaxDist:
+            #stop when MaxNode reached or find the optimal path (the average reward > MaxDist) 
+            break
+        #print "expand ", curState.path
+    print "path", curState.path
+    print "a star", -AStarReward
+    curState.dump()
     return curState.path
 
 #WorldState, listof decision trees -> listof ActionState
