@@ -1,7 +1,7 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, getActionId
+from Def import getAllAction, makeAction, getActionId, dumpAction
 from rlglue.types import Action
 from LinearSARSA import LinearSARSA
 from ML import getCommonVar, getClassVar, Learner
@@ -85,7 +85,7 @@ class ModelAgent(Agent):
             action = self.agent.step(reward, fea)
         else:
             action = self.planning(state)
-            print "planning", action
+            print "planning", dumpAction(action)
 
         lastActionId = getActionId(self.lastAction)
 

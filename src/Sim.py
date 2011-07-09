@@ -1,37 +1,66 @@
 from WorldState import WorldState
 from heapq import heappush, heappop
 from Def import *
+from FeatureMario import BlockLen
 import copy
 
 
 def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
+    print "--------------------"
+    #initState.dump()
+
     MaxState = 10
     MaxDepth = 5
     MaxDist = MaxDepth * 1.8
     nodeList = [] #use priority queue here
+    outOfBoundList = []
     
     curState = copy.copy(initState)
     curState.path = [] #keep track of action path
     curState.reward = 0
+    AStarReward = 1000
+    heappush(nodeList, (AStarReward, curState)) #heappop returns the smallest item
+
 
     #create the initial nodes for 12 actions, each node has 10 world states
     #TODO: add 10 initial states
-    while len(nodeList) < MaxNode:
+    while ((len(nodeList) + len(outOfBoundList)) < MaxNode):
+        #remove a node and expand it
+        isOutOfBound = True
+        while isOutOfBound and len(nodeList) > 0:
+            negAStarReward, curState = heappop(nodeList)
+            mario = curState.mario
+            x = int(mario.x - curState.origin)
+            y = int(mario.y)
+            if not x in range(MaxX - BlockLen) or not y in range(MaxY):
+                isOutOfBound = True
+            else:
+                isOutOfBound = False
+            if isOutOfBound:
+                outOfBoundList.append((negAStarReward, curState))
+        if isOutOfBound and len(nodeList) == 0:
+            #all nodes are out of bound
+            break
+        if negAStarReward <= -MaxDist:
+            #stop when MaxNode reached or find the optimal path (the average reward > MaxDist) 
+            heappush(nodeList, (negAStarReward, curState)) #push the best node back
+            break
+
         stateList =  Expand(curState, dynaLearner, rewardLearner)
         #compute the expected A* reward
         for state in stateList:
             AStarReward = state.reward + state.mario.x - initState.mario.x
             heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
-        #remove a node and expand it
-        AStarReward, curState = heappop(nodeList)
-        if AStarReward >= MaxDist:
-            #stop when MaxNode reached or find the optimal path (the average reward > MaxDist) 
-            break
         #print "expand ", curState.path
+    for node in outOfBoundList:
+        heappush(nodeList, node) #heappop returns the smallest item
+    print "len1: ", len(nodeList)
+    print "len2: ", len(outOfBoundList)
+    negAStarReward, curState = heappop(nodeList)
     print "path", curState.path
-    print "a star", -AStarReward
-    curState.dump()
+    print "a star", -negAStarReward
+    #curState.dump()
     return curState.path
 
 #WorldState, listof decision trees -> listof ActionState

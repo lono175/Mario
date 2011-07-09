@@ -1,17 +1,17 @@
 #from numpy  import *
 from Def    import MonType, MaxX, MaxY
 from WorldState import *
-
+BlockLen = 2
 def getTestFeature(state, actionId):
     mario = state.mario
-    tileList = getTileAroundMario(state, 2)
+    tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
     fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
     return fea
 
 def getTrainFeature(state, classValueList, actionId):
     mario = state.mario
-    tileList = getTileAroundMario(state, 2)
+    tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
     fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea

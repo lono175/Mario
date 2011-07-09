@@ -19,13 +19,15 @@ class WorldState():
         x = int(mario.x - self.origin)
         y = int(mario.y)
         if not x in range(MaxX) or not y in range(MaxY):
-            print "out of boundary:", mario.x, " ", mario.y
+            print "out of boundary:", x, " ", y
         else:
             map[y, x] = ord('M')
 
         for y in range(len( map )):
             for x in range(len(map[y])):
                 a = int(map[y, x])
+                if a == ord(' '):
+                    a = ord('.')
                 print chr(a),
             print ""
 
@@ -92,7 +94,7 @@ def getMonsterGridMap(obs):
     x = int(mario.x - originX)
     y = int(mario.y)
     if not x in range(MaxX) or not y in range(MaxY):
-        print "out of boundary:", mario.x, " ", mario.y
+        print "out of boundary:", x, " ", y
     else:
         map[y, x] = ord(' ')
 
