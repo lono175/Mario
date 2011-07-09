@@ -55,12 +55,14 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
         #print "expand ", curState.path
     for node in outOfBoundList:
         heappush(nodeList, node) #heappop returns the smallest item
-    print "len1: ", len(nodeList)
-    print "len2: ", len(outOfBoundList)
     negAStarReward, curState = heappop(nodeList)
     print "path", curState.path
     print "a star", -negAStarReward
     #curState.dump()
+    if curState.path == []:
+        assert(len(outOfBoundList) == 1)
+        assert(len(nodeList) == 0) #a special case when mario is out of bound at the init state
+        curState.path = [0]
     return curState.path
 
 #WorldState, listof decision trees -> listof ActionState
@@ -103,6 +105,7 @@ from Test import getDummyObservation
 from ML import getCommonVar, getClassVar, Learner
 import orange
 from FeatureMario import getTrainFeature, getTestFeature
+import tool
 
 #def getDummyRewardTree():
         #modelFea = [str(lastActionId), round(lastMario.sx, 1), round(lastMario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] + [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1), 0] #don't learn the pseudo reward
@@ -131,17 +134,11 @@ from FeatureMario import getTrainFeature, getTestFeature
     #monList.append(m)
     #return monList
 
-if __name__ == '__main__':
-
-
+def TestSim(obs):
     MaxY = 16
     MaxX = 22
-    #map = numpy.array([[ord(' ') for x in range(MaxX)] for y in range(MaxY))
-    #monList = getDummyMonsterList() 
-    #mario = getDummyMario()
-
-    obs = getDummyObservation()
     state = WorldState(obs)
+    print "mario loc ", state.mario.x, " ", state.mario.y
 
 
     commonVar = getCommonVar()
@@ -160,6 +157,18 @@ if __name__ == '__main__':
     RewardLearner.add([rewardFea])
    
     print Optimize(state, DynamicLearner, RewardLearner, 100)
+    
+if __name__ == '__main__':
+
+
+    #map = numpy.array([[ord(' ') for x in range(MaxX)] for y in range(MaxY))
+    #monList = getDummyMonsterList() 
+    #mario = getDummyMario()
+
+    obs = getDummyObservation(10, 16)
+    TestSim(obs)
+    obsList = tool.Load('obs.db')
+    TestSim(obsList[len(obsList)-1])
 
         
     

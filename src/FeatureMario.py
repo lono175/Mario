@@ -27,7 +27,7 @@ def getTileBlock(monMap, inX, inY, halfLen):
     res = []
     for y in range(-halfLen + inY, halfLen + inY + 1):
         for x in range(-halfLen + inX, halfLen + inX + 1):
-            if not x in range(MaxX) or not y in range(MaxY):
+            if (not x in range(MaxX)) or (not y in range(MaxY)):
                 tile = ord('w') #the end of the world
             else:
                 tile = monMap[y, x]
@@ -199,86 +199,15 @@ def getSarsaFeature(obs):
     return feaList
 
 #------------unit test function------------------
-class Observation:
-    def __init__(self):
-        pass
-
-def addMonster(m, obs):
-    obs.doubleArray.append(m.x)
-    obs.doubleArray.append(m.y)
-    obs.doubleArray.append(m.sx)
-    obs.doubleArray.append(m.sy)
-    obs.intArray.append(m.type)
-    obs.intArray.append(m.winged)
-    return obs
-
-def getObservation():
-    obs = Observation()
-    obs.doubleArray = []
-    obs.intArray = [40] #originX
-    obs.charArray = []
-    for y in range(0, MaxY):
-        for x in range(0, MaxX):
-            obs.charArray.append('7')
-
-    m = createMario()
-    obs = addMonster(m, obs)
-
-    m = createSpikey()
-    obs = addMonster(m, obs)
-    
-    m = createMushroom()
-    obs = addMonster(m, obs)
-    return obs
-
-def createMario():
-    m = Monster()
-    m.type = MonType.BigMario
-    m.winged = False
-    m.x = 59
-    m.y = 15
-    m.sx = 42.0
-    m.sy = 43.0
-    return m
-
-def createMushroom():
-    m = Monster()
-    m.type = MonType.Mushroom
-    m.winged = False
-    m.x = 59
-    m.y = 15
-    m.sx = 40.0
-    m.sy = 41.0
-    return m
-def createSpikey():
-    m = Monster()
-
-    m.type = MonType.Spikey
-    m.winged = False
-    m.x = 60
-    m.y = 15
-    m.sx = 42.0
-    m.sy = 43.0
-    return m
-    
+from Test import * 
 def Test():
-    obs = getObservation()
-    assert(getOrigin(obs) == 40)
-    badList = getBadMonster(obs)
-    spikey = createSpikey()
-    mush = createMushroom()
-    bad = badList[0]
-    assert(bad.type == spikey.type)
-    assert(bad.x == spikey.x)
-    assert(bad.y == spikey.y)
-    assert(bad.sx == spikey.sx)
-    assert(bad.sy == spikey.sy)
-    assert(bad.winged == spikey.winged)
-    map =  getMonsterGridMap(obs)
-    print map
-
-    gridFeature = getGridFeatureList(obs)
-    print gridFeature
+    obs = getDummyObservation(10, 15)
+    state = WorldState(obs)
+    print "x, y ", state.mario.x, " ", state.mario.y
+    state.dump()
+    tileList = getTileAroundMario(state, BlockLen)
+    modelFea = getTrainFeature(state, [], 0)
+    print modelFea
 
 
     

@@ -32,6 +32,8 @@ class ModelAgent(Agent):
         self.DynamicLearner = Learner(commonVar, classVarList, isSeparateAction)
         isSeparateAction = False
         self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
+
+        self.obsList = [] #TODO: remove me
         
     def planning(self, state):
         MaxNode = 100
@@ -70,6 +72,7 @@ class ModelAgent(Agent):
         return action
 
     def agent_step(self, reward, obs):
+        self.obsList.append(obs)
         #if reward < -0.01 + episilon and reward > -0.01 - episilon:
             #reward = -1
 
@@ -122,6 +125,7 @@ class ModelAgent(Agent):
         self.lastAction = action
 
         self.stepNum = self.stepNum + 1
+
 
         return action
 
