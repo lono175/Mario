@@ -30,6 +30,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
         #remove a node and expand it
         curState = heappop(nodeList)[1]
         print "expand ", curState.path
+    return curState.path
 
 #WorldState, listof decision trees -> listof ActionState
 #treeList includes the reward tree

@@ -1,5 +1,6 @@
 #from numpy  import *
 from Def    import MonType, MaxX, MaxY
+from WorldState import *
 
 def getTestFeature(state, actionId):
     mario = state.mario
@@ -165,6 +166,7 @@ def getConstantFeature(obs):
     #add a dummy term to indicate the location of mario
     #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx+0.5), int(mario.sy+0.5), 0, 2))
     return feaList
+
 
 def getMonsterFeatureList(obs):
     feaList = []

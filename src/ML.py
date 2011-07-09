@@ -154,7 +154,7 @@ def getClassifier(data, domainList):
     return treeList
     
 def getCommonVar():
-    tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7', 'w']
+    tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7', 'w', '\n']
     monTypeList = [ chr(type) for type in [MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]]
 
     tileList = tileList + monTypeList
