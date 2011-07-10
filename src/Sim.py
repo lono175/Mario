@@ -11,7 +11,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     #initState.dump()
 
     MaxState = 10
-    MaxDepth = 3
+    MaxDepth = 4
     MinDepth = 3
     MaxDist = 6#MaxDepth * 1.5
     nodeList = [] #use priority queue here
@@ -23,7 +23,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     AStarReward = 1000
     heappush(nodeList, (AStarReward, curState)) #heappop returns the smallest item
 
-    defaultPath = [[9 for x in range(MaxDepth)], [11 for x in range(MaxDepth)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 9, 11], [9, 11, 9]] #right speed and right jump speed
+    defaultPath = [[9 for x in range(3)], [11 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 9, 11], [9, 11, 9]] #right speed and right jump speed
     for path in defaultPath:
         state =  ExpandPath(path, curState, dynaLearner, rewardLearner)
         #compute the expected A* reward
@@ -63,8 +63,10 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
 
         #compute the expected A* reward
         for state in stateList:
-            AStarReward = state.reward + state.mario.x - initState.mario.x
-            heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
+            if not state.path in defaultPath:
+                #don't search the same path again
+                AStarReward = state.reward + state.mario.x - initState.mario.x
+                heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
         #print "expand ", curState.path
     for node in outOfBoundList:

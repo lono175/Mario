@@ -34,10 +34,10 @@ class ModelAgent(Agent):
         isSeparateAction = False
         self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
 
-        self.obsList = [] #TODO: remove me
+        #self.obsList = [] #TODO: remove me
         
     def planning(self, state):
-        MaxNode = 2000
+        MaxNode = 20000
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode)
         return makeAction(path[0])
 
@@ -73,7 +73,7 @@ class ModelAgent(Agent):
         return action
 
     def agent_step(self, reward, obs):
-        self.obsList.append(obs)
+        #self.obsList.append(obs)
         #if reward < -0.01 + episilon and reward > -0.01 - episilon:
             #reward = -1
 
@@ -101,31 +101,35 @@ class ModelAgent(Agent):
         deltaX = mario.x - (lastMario.x + lastMario.sx)
         deltaY = mario.y - (lastMario.y + lastMario.sy)
         
-        modelFea = getTrainFeature(self.lastState, [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)], lastActionId)
-        rewardFea = getTrainFeature(self.lastState, [0], lastActionId) #don't learn the pseudo reward
+        classVar = [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
+        rewardClassVar = [0]
+        modelFea = getTrainFeature(self.lastState, classVar, lastActionId)
+        rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
 
         if not self.DynamicLearner.empty():
+            predictModelClass = self.DynamicLearner.getClass(modelFea)
+            predictModelClass = [round(v, 1) for v in predictModelClass]
             print "feature: ", modelFea
-            print "predict: ", self.DynamicLearner.getClass(modelFea)
+            print "predict: ", predictModelClass
+            if not classVar == predictModelClass:
+                self.feaList.append(modelFea)
+            else:
+                print "pass model-------------"
+        else:
+            self.feaList.append(modelFea)
+
+
         if not self.RewardLearner.empty():
+            predictRewardClass = self.RewardLearner.getClass(rewardFea)
+            predictRewardClass = [round(v, 1) for v in predictRewardClass]
             print "reward: ", reward
-            preReward, = self.RewardLearner.getClass(rewardFea)
-            print "pre reward: ", preReward
-
-        #assert(self.treeList != [])
-        #if self.treeList != []:
-            #pass
-            #print self.treeList
-            #print "feature: ", modelFea
-            #print "predict: ", classify(modelFea, self.treeList, self.domainList)
-            #print "reward: ", reward
-        #if self.rewardTreeList != []:
-            #print "predict reward: ",  classifyRewardDomain(rewardFea, self.rewardTreeList[0], self.rewardDomain)
-
-            #print "test feaL ", self.feaList[0]
-            #print "test predict: ", classify(self.feaList[0], self.treeList, self.domainList)
-        self.feaList.append(modelFea)
-        self.rewardFeaList.append(rewardFea)
+            print "pre reward: ", predictRewardClass
+            if not rewardClassVar == predictRewardClass:
+                self.rewardFeaList.append(rewardFea)
+            else:
+                print "pass reward-------------"
+        else:
+            self.rewardFeaList.append(rewardFea)
 
         self.lastState = state
         self.lastAction = action
