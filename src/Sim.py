@@ -3,15 +3,17 @@ from heapq import heappush, heappop
 from Def import *
 from FeatureMario import BlockLen
 import copy
+import random
 
-
+MaxActionId = 12
 def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     print "--------------------"
     #initState.dump()
 
     MaxState = 10
-    MaxDepth = 5
-    MaxDist = MaxDepth * 1.8
+    MaxDepth = 3
+    MinDepth = 3
+    MaxDist = 6#MaxDepth * 1.5
     nodeList = [] #use priority queue here
     outOfBoundList = []
     
@@ -21,10 +23,16 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     AStarReward = 1000
     heappush(nodeList, (AStarReward, curState)) #heappop returns the smallest item
 
+    defaultPath = [[9 for x in range(MaxDepth)], [11 for x in range(MaxDepth)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 9, 11], [9, 11, 9]] #right speed and right jump speed
+    for path in defaultPath:
+        state =  ExpandPath(path, curState, dynaLearner, rewardLearner)
+        #compute the expected A* reward
+        AStarReward = state.reward + state.mario.x - initState.mario.x
+        heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
     #create the initial nodes for 12 actions, each node has 10 world states
     #TODO: add 10 initial states
-    while ((len(nodeList) + len(outOfBoundList)) < MaxNode):
+    while (len(curState.path) < MinDepth) or ((len(nodeList) + len(outOfBoundList)) < MaxNode):
         #remove a node and expand it
         isOutOfBound = True
         while isOutOfBound and len(nodeList) > 0:
@@ -32,7 +40,8 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
             mario = curState.mario
             x = int(mario.x - curState.origin)
             y = int(mario.y)
-            if not x in range(MaxX - BlockLen) or not y in range(MaxY):
+            #if not x in range(MaxX - BlockLen) or not y in range(MaxY) or len(curState.path) > MaxDepth:
+            if len(curState.path) > MaxDepth:
                 isOutOfBound = True
             else:
                 isOutOfBound = False
@@ -46,7 +55,12 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
             heappush(nodeList, (negAStarReward, curState)) #push the best node back
             break
 
-        stateList =  Expand(curState, dynaLearner, rewardLearner)
+        stateList = []
+        ActionRange = range(MaxActionId)
+        for actionId in ActionRange:
+            newState =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
+            stateList.append(newState)
+
         #compute the expected A* reward
         for state in stateList:
             AStarReward = state.reward + state.mario.x - initState.mario.x
@@ -60,17 +74,44 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     print "a star", -negAStarReward
     #curState.dump()
     if curState.path == []:
-        assert(len(outOfBoundList) == 1)
+        #assert(len(outOfBoundList) == 1)
+        print len(nodeList)
         assert(len(nodeList) == 0) #a special case when mario is out of bound at the init state
-        curState.path = [0]
+        curState.path = [int(random.random()*MaxActionId)]
     return curState.path
 
+    
+def ExpandPath(path, state, dynaLearner, rewardLearner):
+    for actionId in path:
+        fea = getTestFeature(state, actionId)
+        m = state.mario
+        sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
+        sx = round(sx, 1) 
+        sy = round(sy, 1)
+        dx = round(dx, 1)
+        dy = round(dy, 1)
+        reward, = rewardLearner.getClass(fea)
+
+        newMario = copy.deepcopy(m)
+        
+        newMario.x = m.x + m.sx + dx
+        newMario.y = m.y + m.sy + dy
+        newMario.sx = sx
+        newMario.sy = sy
+
+        newState = copy.copy(state) #with static assumption, everything other than mario stays the same
+        newState.path = copy.copy(state.path)
+        newState.mario = newMario
+        newState.reward = reward + state.reward
+        newState.path.append(actionId)
+        state = newState
+    return state
 #WorldState, listof decision trees -> listof ActionState
 #treeList includes the reward tree
 #sample the effect of all actions for the mario state
 def Expand(state, dynaLearner, rewardLearner):
     newStateList = []
-    ActionRange = range(12)
+    ActionRange = range(MaxActionId)
     for actionId in ActionRange:
         fea = getTestFeature(state, actionId)
         m = state.mario
@@ -157,18 +198,55 @@ def TestSim(obs):
     RewardLearner.add([rewardFea])
    
     print Optimize(state, DynamicLearner, RewardLearner, 100)
-    
+def TestSimPath(path, state, dynaLearner, rewardLearner):
+    for actionId in path:
+        fea = getTestFeature(state, actionId)
+        m = state.mario
+        sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
+        reward, = rewardLearner.getClass(fea)
+        state.dump()
+        print "mario: ", m.x, " ", m.y, " ", reward
+
+        newMario = copy.deepcopy(m)
+        
+        newMario.x = m.x + m.sx + dx
+        newMario.y = m.y + m.sy + dy
+        newMario.sx = sx
+        newMario.sy = sy
+
+        newState = copy.copy(state) #with static assumption, everything other than mario stays the same
+        newState.mario = newMario
+        state = newState
+
+
+def TestSimRealAgent():
+    MaxY = 16
+    MaxX = 22
+    agent = tool.Load('mario.db')
+    obsList = agent.obsList
+    print len(obsList)
+    obs = obsList[len(obsList) - 2]
+    state = WorldState(obs)
+    print "mario loc ", state.mario.x, " ", state.mario.y
+
+
+    DynamicLearner = agent.DynamicLearner
+    RewardLearner = agent.RewardLearner
+   
+    path = Optimize(state, DynamicLearner, RewardLearner, 100)
+    print path
+    TestSimPath(path, state, DynamicLearner, RewardLearner)
+        
 if __name__ == '__main__':
 
 
-    #map = numpy.array([[ord(' ') for x in range(MaxX)] for y in range(MaxY))
-    #monList = getDummyMonsterList() 
-    #mario = getDummyMario()
 
     obs = getDummyObservation(10, 16)
     TestSim(obs)
-    obsList = tool.Load('obs.db')
-    TestSim(obsList[len(obsList)-1])
+    #obsList = tool.Load('obs.db')
+    #TestSim(obsList[len(obsList)-1])
 
+    #TestSimRealAgent()
+   
         
     

@@ -13,10 +13,10 @@ class ModelAgent(Agent):
     def __init__(self):
         print "init"
         random.seed(0)
-        actionList = getAllAction()
+        self.actionList = getAllAction()
         initialQ = 0
         dumpCount = 100000
-        self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
+        self.agent = LinearSARSA(0.05, 0.05, 0.95, self.actionList, initialQ, dumpCount)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
@@ -24,6 +24,7 @@ class ModelAgent(Agent):
         self.feaList = []
         self.rewardFeaList = []
         self.episodeNum = 0
+        self.epsilon = 0.05
 
         commonVar = getCommonVar()
         classVarList = getClassVar()
@@ -36,7 +37,7 @@ class ModelAgent(Agent):
         self.obsList = [] #TODO: remove me
         
     def planning(self, state):
-        MaxNode = 100
+        MaxNode = 2000
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode)
         return makeAction(path[0])
 
@@ -87,8 +88,13 @@ class ModelAgent(Agent):
             fea = getSarsaFeature(obs)
             action = self.agent.step(reward, fea)
         else:
-            action = self.planning(state)
-            print "planning", dumpAction(action)
+            #episilon greey policy
+            if random.random() < self.epsilon:
+                #select randomly
+                action = self.actionList[int(random.random()*len(self.actionList))]
+            else:
+                action = self.planning(state)
+                print "planning", dumpAction(action)
 
         lastActionId = getActionId(self.lastAction)
 
