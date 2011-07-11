@@ -4,6 +4,7 @@
 import orange, random
 import orngWrap, orngTree
 from FeatureMario import MonType
+from Def import ActionRange
 class Learner:
     """A wrapper object to all machine learner"""
     def __init__(self, commonVar, classVarList, isSeparateAction):
@@ -80,7 +81,6 @@ def printTree(x):
         printTree0(x, 0)
     else:
         raise TypeError, "invalid parameter"
-ActionRange = range(12)
 #SpeedRange = range(-2, 3)
 #DeltaRange = range(-4, 5)
 

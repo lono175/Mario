@@ -34,11 +34,14 @@ class ModelAgent(Agent):
         isSeparateAction = False
         self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
 
+        self.lastPlan = []
+
         #self.obsList = [] #TODO: remove me
         
     def planning(self, state):
-        MaxNode = 20000
-        path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode)
+        MaxNode = 4000
+        path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan)
+        self.lastPlan = path
         return makeAction(path[0])
 
     def agent_init(self, taskSpecString):

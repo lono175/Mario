@@ -21,6 +21,13 @@ class MonType:
 
 MaxY = 16
 MaxX = 22
+def getActionRange():
+    range = []
+    actionList = getAllAction()
+    for action in actionList:
+        range.append(getActionId(action))
+    return range
+
 
 class Monster:
     def __init__(self):
@@ -42,6 +49,11 @@ def getAction(dir, isJump, isSpeed):
     action.intArray.append(isSpeed)
     return action
 
+def getActionType(actionId):
+    isSpeed = actionId & 1
+    isJump = (actionId >> 1) & 1
+    dir = (actionId >> 2) - 1
+    return dir, isJump, isSpeed
 def dumpAction(action):
     print action.intArray[0], " ", action.intArray[1], " ", action.intArray[2]
 
@@ -67,6 +79,12 @@ def getAllAction():
     for dir in [-1, 0, 1]:
         for isJump in [0, 1]:
             for isSpeed in [0, 1]:
+                if dir == 0 and isJump == 0 and isSpeed == 0:
+                    continue
+                if dir == 0 and isJump == 0 and isSpeed == 1:
+                    continue
+                if dir == 0 and isJump == 1 and isSpeed == 1:
+                    continue
                 action = getAction(dir, isJump, isSpeed)
                 actionList.append(action)
     #actionList = [getAction(1, 1, 1)]
@@ -81,3 +99,6 @@ def makeAction(actionId):
     isJump = (actionId >> 1) & 1
     dir = (actionId >> 2) - 1
     return getAction(dir, isJump, isSpeed)
+
+ActionRange = getActionRange()
+

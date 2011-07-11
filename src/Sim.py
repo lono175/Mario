@@ -5,15 +5,14 @@ from FeatureMario import BlockLen
 import copy
 import random
 
-MaxActionId = 12
-def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
+def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
     print "--------------------"
     #initState.dump()
 
     MaxState = 10
-    MaxDepth = 4
+    MaxDepth = 5
     MinDepth = 3
-    MaxDist = 6#MaxDepth * 1.5
+    MaxDist = 7# usually we can get 8.5 without any barrier
     nodeList = [] #use priority queue here
     outOfBoundList = []
     
@@ -23,9 +22,18 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
     AStarReward = 1000
     heappush(nodeList, (AStarReward, curState)) #heappop returns the smallest item
 
-    defaultPath = [[9 for x in range(3)], [11 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 9, 11], [9, 11, 9]] #right speed and right jump speed
+    defaultPath = [[9 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 11, 9], [9, 9, 11]] #right speed and right jump speed
+
+    if PrevPlan != []:
+       PrevPlan.pop(0) 
+    if PrevPlan != [] and (not PrevPlan in defaultPath):
+        defaultPath.append(PrevPlan)
+    #TODO: check if default path is valid or not (can jump and same state)
+
     for path in defaultPath:
-        state =  ExpandPath(path, curState, dynaLearner, rewardLearner)
+        state, isValid =  ExpandPath(path, curState, dynaLearner, rewardLearner)
+        if not isValid:
+            continue
         #compute the expected A* reward
         AStarReward = state.reward + state.mario.x - initState.mario.x
         heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
@@ -56,10 +64,10 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
             break
 
         stateList = []
-        ActionRange = range(MaxActionId)
         for actionId in ActionRange:
-            newState =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
-            stateList.append(newState)
+            newState, isValid =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
+            if isValid:
+                 stateList.append(newState)
 
         #compute the expected A* reward
         for state in stateList:
@@ -80,6 +88,8 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode):
         print len(nodeList)
         assert(len(nodeList) == 0) #a special case when mario is out of bound at the init state
         curState.path = [int(random.random()*MaxActionId)]
+
+    PrevPlan = copy.copy(curState.path)
     return curState.path
 
     
@@ -106,14 +116,20 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
         newState.mario = newMario
         newState.reward = reward + state.reward
         newState.path.append(actionId)
-        state = newState
-    return state
+
+        dir, isJump, isSpeed = getActionType(actionId)
+        if (not (newState.mario.sy >= 0 and isJump)) and (newState.mario != state.mario): #Jump does not increase y-speed, do not need to search anymore
+            state = newState
+            isValid = True
+        else:
+            isValid = False
+            break #not a valid action
+    return state, isValid
 #WorldState, listof decision trees -> listof ActionState
 #treeList includes the reward tree
 #sample the effect of all actions for the mario state
 def Expand(state, dynaLearner, rewardLearner):
     newStateList = []
-    ActionRange = range(MaxActionId)
     for actionId in ActionRange:
         fea = getTestFeature(state, actionId)
         m = state.mario
@@ -192,7 +208,7 @@ def TestSim(obs):
     isSeparateAction = False
     RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
 
-    lastActionId = 7
+    lastActionId = 9
     modelFea = getTrainFeature(state, [2.0, 1.0, 0.0, 0.0], lastActionId)
     rewardFea = getTrainFeature(state, [0.0], lastActionId) #don't learn the pseudo reward
 
