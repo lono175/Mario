@@ -21,6 +21,17 @@ def getTileAroundMario(state, halfLen):
     originX = state.origin
     return getTileBlock(state.gridMap, int(m.x - originX), int(m.y), halfLen)
     
+def isMarioInPit(state):
+    m = state.mario
+    pitList = state.pitList
+    mx = m.x - state.origin
+    my = m.y
+
+    for pit in pitList:
+        if mx >= pit.x and mx < (pit.x + pit.width) and my >= pit.y and my < (pit.y+pit.height):
+            return True
+    return False
+
 #OBS, int, int, int -> list of tile and monster
 #x, y is the coordinate of screen
 def getTileBlock(monMap, inX, inY, halfLen):
@@ -208,6 +219,22 @@ def Test():
     tileList = getTileAroundMario(state, BlockLen)
     modelFea = getTrainFeature(state, [], 0)
     print modelFea
+
+    obs = getDummyPitObservation(10, 13)
+    state = WorldState(obs)
+    assert(isMarioInPit(state) == True)
+    obs = getDummyPitObservation(9, 13)
+    state = WorldState(obs)
+    assert(isMarioInPit(state) == True)
+    obs = getDummyPitObservation(11, 13)
+    state = WorldState(obs)
+    assert(isMarioInPit(state) == True)
+    obs = getDummyPitObservation(11, 12)
+    state = WorldState(obs)
+    state.mario.y = 10.95
+    state.mario.x = 12.9 + state.origin
+    state.dump()
+    assert(isMarioInPit(state) == False)
 
 
     

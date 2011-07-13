@@ -125,6 +125,7 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
             isValid = False
             break #not a valid action
     return state, isValid
+
 #WorldState, listof decision trees -> listof ActionState
 #treeList includes the reward tree
 #sample the effect of all actions for the mario state
@@ -171,6 +172,7 @@ import tool
         #rewardFea = toRewardFea(modelFea, len(self.domainList))
 #def getDummyTree():
         #
+
 #def getDummyMario():
     #m = Monster()
     #m.type = MonType.Mario 

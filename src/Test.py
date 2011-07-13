@@ -14,6 +14,30 @@ def addMonster(m, obs):
     obs.intArray.append(m.winged)
     return obs
 
+def getDummyPitObservation(marioX, marioY):
+    obs = Observation()
+    obs.doubleArray = []
+    obs.intArray = [40] #originX
+    obs.charArray = []
+    for y in range(0, MaxY):
+        for x in range(0, MaxX):
+            obs.charArray.append('7')
+    for y in range(0, marioY-1):
+        for x in range(MaxX):
+            obs.charArray[y*MaxX + x] = ' '
+    for y in range(marioY-1, MaxY):
+        for x in range(marioX-1, marioX+2):
+            obs.charArray[y*MaxX + x] = ' '
+
+    m = createMario(obs.intArray[0]+marioX, marioY)
+    obs = addMonster(m, obs)
+
+    m = createSpikey()
+    obs = addMonster(m, obs)
+    
+    m = createMushroom()
+    obs = addMonster(m, obs)
+    return obs
 def getDummyObservation(marioX, marioY):
     obs = Observation()
     obs.doubleArray = []

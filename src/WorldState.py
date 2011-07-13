@@ -11,6 +11,9 @@ class WorldState():
         self.origin = getOrigin(obs)
         self.gridMap = getMonsterGridMap(obs)
         self.monsterList = getMonsterNoMario(obs)
+        #self.dump()
+        #print "---------------------"
+        self.pitList = getPitList(obs)
 
     def dump(self):
         map = copy.copy(self.gridMap)
@@ -30,7 +33,9 @@ class WorldState():
                     a = ord('.')
                 print chr(a),
             print ""
-
+class Pit():
+    def __init__(self):
+        pass
 def getOrigin(obs):
     return obs.intArray[0]
 
@@ -41,7 +46,65 @@ def getMario(obs):
             #print "type: ", m.type
             return m
     assert(False)
+def getPitList(obs):
+    pitList = []
+    emptyTile = [ord('M'), ord(' ')]
 
+    map = zeros( (MaxY, MaxX), dtype=int )     
+    for y in range(0, MaxY):
+        for x in range(0, MaxX):
+            map[y, x] = getTileAt(x, y, obs)
+
+    #search for width
+    prevEmptyLoc = -1 
+    for x in range(MaxX):
+        if map[MaxY-1, x] in emptyTile:
+            if prevEmptyLoc == -1:
+                prevEmptyLoc = x
+        else:
+            if prevEmptyLoc != -1:
+                pit = Pit()
+                pit.x = prevEmptyLoc
+                pit.width = x - prevEmptyLoc
+                pitList.append(pit)
+
+            prevEmptyLoc = -1
+
+    newPitList = []
+
+    #search for height
+    for pit in pitList:
+        #exclude the pit which is near the world boundary
+        if pit.x - 1< 0:
+            continue
+        if (pit.width + pit.x) > MaxX:
+            continue
+        #find the fist ' ' from the bottom        
+        for y in range(MaxY-2, -1, -1):
+            if map[y, pit.x-1] in emptyTile:
+                pit.y = y+1
+                pit.height = MaxY - pit.y
+                break
+        assert(pit.y >= 0)
+        newPitList.append(pit)
+
+    #check if the pit has a "lid" on it
+    pitList = []
+    for pit in newPitList:
+        hasLid = False
+        for y in range(pit.y-1, MaxY):
+            if not map[y, pit.x] in emptyTile:
+                hasLid = True
+                break 
+        if not hasLid:
+            pitList.append(pit)
+            
+
+        
+    return pitList
+        
+    
+            
 def getMonsterList(obs):
     monList = []
     for i in range(0, len(obs.intArray)):
@@ -180,9 +243,9 @@ def getMonsterTypeList():
     return monTypeList
 
 #------------unit test function------------------
-from Test import getDummyObservation
+from Test import *
 def Test():
-    obs = getDummyObservation()
+    obs = getDummyObservation(10, 15)
     #assert(getOrigin(obs) == 40)
     #badList = getBadMonster(obs)
     #map =  getMonsterGridMap(obs)
@@ -190,6 +253,13 @@ def Test():
 
     world = WorldState(obs)
     world.dump()
+
+    obs = getDummyPitObservation(10, 13)
+    state = WorldState(obs)
+    state.dump()
+    print state.pitList
+    for pit in state.pitList:
+        print pit.x, " ", pit.y, " ", pit.width, " ", pit.height
     
 if __name__ == '__main__':
     Test()

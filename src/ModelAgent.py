@@ -6,7 +6,7 @@ from rlglue.types import Action
 from LinearSARSA import LinearSARSA
 from ML import getCommonVar, getClassVar, Learner
 from WorldState import WorldState
-from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature
+from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit
 from Sim import Optimize
 
 class ModelAgent(Agent):
@@ -39,7 +39,7 @@ class ModelAgent(Agent):
         #self.obsList = [] #TODO: remove me
         
     def planning(self, state):
-        MaxNode = 4000
+        MaxNode = 2000
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan)
         self.lastPlan = path
         return makeAction(path[0])
@@ -87,6 +87,11 @@ class ModelAgent(Agent):
         dx = mario.x - lastMario.x
 
         reward = reward + dx
+        modelReward = 0
+        if isMarioInPit(state):
+            print "in pit !!!!!!!"
+            reward = reward - 30
+            modelReward = -30
         if self.DynamicLearner.empty() or self.RewardLearner.empty():
             fea = getSarsaFeature(obs)
             action = self.agent.step(reward, fea)
@@ -105,7 +110,7 @@ class ModelAgent(Agent):
         deltaY = mario.y - (lastMario.y + lastMario.sy)
         
         classVar = [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
-        rewardClassVar = [0]
+        rewardClassVar = [round(modelReward, 0)]
         modelFea = getTrainFeature(self.lastState, classVar, lastActionId)
         rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
 
@@ -125,7 +130,7 @@ class ModelAgent(Agent):
         if not self.RewardLearner.empty():
             predictRewardClass = self.RewardLearner.getClass(rewardFea)
             predictRewardClass = [round(v, 1) for v in predictRewardClass]
-            print "reward: ", reward
+            print "reward: ", modelReward
             print "pre reward: ", predictRewardClass
             if not rewardClassVar == predictRewardClass:
                 self.rewardFeaList.append(rewardFea)
