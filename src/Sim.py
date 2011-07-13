@@ -51,7 +51,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
             x = int(mario.x - curState.origin)
             y = int(mario.y)
             #if not x in range(MaxX - BlockLen) or not y in range(MaxY) or len(curState.path) > MaxDepth:
-            if len(curState.path) > MaxDepth:
+            if len(curState.path) > MaxDepth or curState.reward <= InPitPenalty:
                 isOutOfBound = True
             else:
                 isOutOfBound = False

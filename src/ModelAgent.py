@@ -1,7 +1,7 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, getActionId, dumpAction
+from Def import getAllAction, makeAction, getActionId, dumpAction, InPitPenalty
 from rlglue.types import Action
 from LinearSARSA import LinearSARSA
 from ML import getCommonVar, getClassVar, Learner
@@ -90,8 +90,8 @@ class ModelAgent(Agent):
         modelReward = 0
         if isMarioInPit(state):
             print "in pit !!!!!!!"
-            reward = reward - 30
-            modelReward = -30
+            reward = reward + InPitPenalty
+            modelReward = InPitPenalty
         if self.DynamicLearner.empty() or self.RewardLearner.empty():
             fea = getSarsaFeature(obs)
             action = self.agent.step(reward, fea)
@@ -149,7 +149,7 @@ class ModelAgent(Agent):
 
     def agent_end(self,reward):
         if reward == -10.0:
-            reward = -50.0
+            reward = InPitPenalty
 
         lastActionId = getActionId(self.lastAction)
         rewardFea = getTrainFeature(self.lastState, [round(reward, 1)], lastActionId) #don't learn the pseudo reward
