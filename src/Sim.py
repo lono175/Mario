@@ -38,9 +38,11 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
         AStarReward = state.reward + state.mario.x - initState.mario.x
         heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
+    negAStarReward, curState = heappop(nodeList)
     #create the initial nodes for 12 actions, each node has 10 world states
     #TODO: add 10 initial states
     while (len(curState.path) < MinDepth) or ((len(nodeList) + len(outOfBoundList)) < MaxNode):
+        heappush(nodeList, (negAStarReward, curState))
         #remove a node and expand it
         isOutOfBound = True
         while isOutOfBound and len(nodeList) > 0:
@@ -75,6 +77,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
                 #don't search the same path again
                 AStarReward = state.reward + state.mario.x - initState.mario.x
                 heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
+        negAStarReward, curState = heappop(nodeList)
 
         #print "expand ", curState.path
     for node in outOfBoundList:
