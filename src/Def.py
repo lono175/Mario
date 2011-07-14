@@ -23,12 +23,12 @@ class MonType:
 
 MaxY = 16
 MaxX = 22
-def getActionRange():
-    range = []
-    actionList = getAllAction()
-    for action in actionList:
-        range.append(getActionId(action))
-    return range
+#def getActionRange():
+    #range = []
+    #actionList = getAllAction()
+    #for action in actionList:
+        #range.append(getActionId(action))
+    #return range
 
 
 class Monster:
@@ -88,7 +88,7 @@ def getAllAction():
                 if dir == 0 and isJump == 1 and isSpeed == 1:
                     continue
                 action = getAction(dir, isJump, isSpeed)
-                actionList.append(action)
+                actionList.append(getActionId(action))
     #actionList = [getAction(1, 1, 1)]
     return actionList
 
@@ -102,5 +102,5 @@ def makeAction(actionId):
     dir = (actionId >> 2) - 1
     return getAction(dir, isJump, isSpeed)
 
-ActionRange = getActionRange()
+ActionRange = getAllAction()
 

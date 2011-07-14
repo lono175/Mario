@@ -1,7 +1,7 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, getActionId, dumpAction, InPitPenalty, DeathPenalty
+from Def import getAllAction, makeAction, dumpAction, InPitPenalty, DeathPenalty
 from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
 from LinearHORDQ import LinearHORDQ
@@ -45,7 +45,7 @@ class ModelAgent(Agent):
         MaxNode = 2000
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan)
         self.lastPlan = path
-        return makeAction(path[0])
+        return path[0]
 
     def agent_init(self, taskSpecString):
 
@@ -77,7 +77,7 @@ class ModelAgent(Agent):
             action = self.agent.start(fea, action)
         self.stepNum = 0
         self.lastAction = action
-        return action
+        return makeAction(action)
 
     def agent_step(self, reward, obs):
         #self.obsList.append(obs)
@@ -107,11 +107,11 @@ class ModelAgent(Agent):
                 action = self.actionList[int(random.random()*len(self.actionList))]
             else:
                 action = self.planning(state)
-                print "planning", dumpAction(action)
+                print "planning", action
                 action = self.agent.step(reward, fea, action)
-                print "HORDQ", dumpAction(action)
+                print "HORDQ", action
 
-        lastActionId = getActionId(self.lastAction)
+        lastActionId = self.lastAction
 
         deltaX = mario.x - (lastMario.x + lastMario.sx)
         deltaY = mario.y - (lastMario.y + lastMario.sy)
@@ -152,7 +152,7 @@ class ModelAgent(Agent):
         self.stepNum = self.stepNum + 1
 
 
-        return action
+        return makeAction(action)
 
     def agent_end(self,reward):
         modelReward = reward
@@ -160,7 +160,7 @@ class ModelAgent(Agent):
             reward = DeathPenalty
             modelReward = InPitPenalty
 
-        lastActionId = getActionId(self.lastAction)
+        lastActionId = self.lastAction
         rewardFea = getTrainFeature(self.lastState, [round(modelReward, 1)], lastActionId) #don't learn the pseudo reward
 
         self.rewardFeaList.append(rewardFea)
