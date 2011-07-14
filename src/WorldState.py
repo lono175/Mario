@@ -234,9 +234,8 @@ def getMonsterNoMario(obs):
     monList = getMonsterList(obs)
     return removeMario(monList)
 
-def getBadMonster(obs):
-    monList = getMonsterList(obs)                    
-    return removeGoodMonster(monList)
+def getBadMonster(state):
+    return removeGoodMonster(state.monsterList)
 
 def getMonsterTypeList():
     monTypeList = [MonType.Mario, MonType.RedKoopa, MonType.GreenKoopa, MonType.Goomba, MonType.Spikey, MonType.PiranhaPlant, MonType.Mushroom, MonType.FireFlower, MonType.Fireball, MonType.Shall, MonType.BigMario, MonType.FieryMario, MonType.FlyRedKoopa, MonType.FlyGreenKoopa, MonType.FlyGoomba, MonType.FlySpikey]

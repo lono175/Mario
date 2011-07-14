@@ -179,10 +179,10 @@ def getConstantFeature(obs):
     return feaList
 
 
-def getMonsterFeatureList(obs):
+def getMonsterFeatureList(state, prevAction):
     feaList = []
-    monList = getBadMonster(obs) 
-    mario = getMario(obs)
+    monList = getBadMonster(state) 
+    mario = state.mario
     vx = getQuanVec(mario.sx)
     vy = getQuanVec(mario.sy)
     #for m in monList:
@@ -191,22 +191,31 @@ def getMonsterFeatureList(obs):
         #feaList.append(fea)
     for m in monList:
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx + 0.5), vx, m.type)
-        fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
+        dx = round(m.x - mario.x, 0)
+        dy = round(m.y - mario.y, 0)
+        if dx > 5 or dx < -3:
+            continue
+        if abs(dy) > 5 :
+            continue
+        fea = (dx, dy, prevAction, m.type)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
     return feaList
     
-def getSarsaFeature(obs):
+def getSarsaFeature(state, prevAction):
     feaList = []
     #feaList.append((int(0), int(mario.y + 0.5), int(mario.sx), int(mario.sy), 0, mario.winged))
     #fea = getConstantFeature(obs)
     #feaList.extend(fea)
-    fea = getMonsterFeatureList(obs)
+    fea = getMonsterFeatureList(state, prevAction)
     feaList.extend(fea)
     #fea = getTileList(obs)
-    fea = getGridFeatureList(obs)
-    feaList.extend(fea)
+    #fea = getGridFeatureList(obs)
+    #feaList.extend(fea)
+
+    if feaList == []:
+        feaList.append(())
     return feaList
 
 #------------unit test function------------------

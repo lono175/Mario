@@ -1,14 +1,16 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, getActionId, dumpAction, InPitPenalty
+from Def import getAllAction, makeAction, getActionId, dumpAction, InPitPenalty, DeathPenalty
 from rlglue.types import Action
-from LinearSARSA import LinearSARSA
+#from LinearSARSA import LinearSARSA
+from LinearHORDQ import LinearHORDQ
 from ML import getCommonVar, getClassVar, Learner
 from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit
 from Sim import Optimize
 
+NoTask = -1
 class ModelAgent(Agent):
     def __init__(self):
         print "init"
@@ -16,7 +18,8 @@ class ModelAgent(Agent):
         self.actionList = getAllAction()
         initialQ = 0
         dumpCount = 100000
-        self.agent = LinearSARSA(0.05, 0.05, 0.95, self.actionList, initialQ, dumpCount)
+        pseudoReward = 10
+        self.agent = LinearHORDQ(0.1, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
@@ -24,7 +27,7 @@ class ModelAgent(Agent):
         self.feaList = []
         self.rewardFeaList = []
         self.episodeNum = 0
-        self.epsilon = 0.05
+        self.epsilon = 0.00 #TODO: disable the exploration here
 
         commonVar = getCommonVar()
         classVarList = getClassVar()
@@ -66,11 +69,12 @@ class ModelAgent(Agent):
     def agent_start(self, obs):
         state = WorldState(obs)
         self.lastState = state
+        fea = getSarsaFeature(state, NoTask)
         if self.DynamicLearner.empty() or self.RewardLearner.empty():
-            fea = getSarsaFeature(obs)
-            action = self.agent.start(fea)
+            action = self.agent.start(fea, NoTask)
         else:
             action = self.planning(state)
+            action = self.agent.start(fea, action)
         self.stepNum = 0
         self.lastAction = action
         return action
@@ -81,6 +85,7 @@ class ModelAgent(Agent):
             #reward = -1
 
         state = WorldState(obs)
+        fea = getSarsaFeature(state, self.lastAction)
         lastMario = self.lastState.mario
         mario = state.mario #for internal reward system
         #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
@@ -90,11 +95,11 @@ class ModelAgent(Agent):
         modelReward = 0
         if isMarioInPit(state):
             print "in pit !!!!!!!"
-            reward = reward + InPitPenalty
+            #reward = reward + InPitPenalty #no pit penalty for HORDQ
             modelReward = InPitPenalty
         if self.DynamicLearner.empty() or self.RewardLearner.empty():
-            fea = getSarsaFeature(obs)
-            action = self.agent.step(reward, fea)
+            #fea = getSarsaFeature(obs)
+            action = self.agent.step(reward, fea, NoTask)
         else:
             #episilon greey policy
             if random.random() < self.epsilon:
@@ -103,6 +108,8 @@ class ModelAgent(Agent):
             else:
                 action = self.planning(state)
                 print "planning", dumpAction(action)
+                action = self.agent.step(reward, fea, action)
+                print "HORDQ", dumpAction(action)
 
         lastActionId = getActionId(self.lastAction)
 
@@ -148,11 +155,13 @@ class ModelAgent(Agent):
         return action
 
     def agent_end(self,reward):
+        modelReward = reward
         if reward == -10.0:
-            reward = InPitPenalty
+            reward = DeathPenalty
+            modelReward = InPitPenalty
 
         lastActionId = getActionId(self.lastAction)
-        rewardFea = getTrainFeature(self.lastState, [round(reward, 1)], lastActionId) #don't learn the pseudo reward
+        rewardFea = getTrainFeature(self.lastState, [round(modelReward, 1)], lastActionId) #don't learn the pseudo reward
 
         self.rewardFeaList.append(rewardFea)
 
@@ -163,8 +172,11 @@ class ModelAgent(Agent):
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastState.mario.x
         self.totalStep = self.totalStep + self.stepNum
 
-        if self.DynamicLearner.empty() or self.RewardLearner.empty():
-            self.agent.end(reward)
+        #if self.DynamicLearner.empty() or self.RewardLearner.empty():
+        self.agent.end(reward)
+        #else:
+            #self.agent.end(reward)
+            
 
         self.rewardList.append(reward)
         self.distList.append(self.lastState.mario.x)
