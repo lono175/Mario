@@ -193,7 +193,7 @@ def getMonsterFeatureList(state, prevAction):
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
         dx = round(m.x - mario.x, 0)
         dy = round(m.y - mario.y, 0)
-        if dx > 5 or dx < -3:
+        if dx > 7 or dx <= -3:
             continue
         if abs(dy) > 5 :
             continue

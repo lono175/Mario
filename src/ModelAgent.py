@@ -4,7 +4,8 @@ from rlglue.agent.Agent import Agent
 from Def import getAllAction, makeAction, dumpAction, InPitPenalty, DeathPenalty
 from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
-from LinearHORDQ import LinearHORDQ
+#from LinearHORDQ import LinearHORDQ
+from LambdaHORDQ import LambdaHORDQ
 from ML import getCommonVar, getClassVar, Learner
 from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit
@@ -18,8 +19,9 @@ class ModelAgent(Agent):
         self.actionList = getAllAction()
         initialQ = 0
         dumpCount = 100000
-        pseudoReward = 10
-        self.agent = LinearHORDQ(0.1, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
+        pseudoReward = 6
+        #self.agent = LinearHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
+        self.agent = LambdaHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
@@ -42,7 +44,7 @@ class ModelAgent(Agent):
         #self.obsList = [] #TODO: remove me
         
     def planning(self, state):
-        MaxNode = 2000
+        MaxNode = 500
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan)
         self.lastPlan = path
         return path[0]

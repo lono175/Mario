@@ -61,9 +61,9 @@ def GenPasswd2(length=8, chars=string.letters + string.digits):
 from ModelAgent import ModelAgent
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
+    agent = tool.Load("mario.db")
     #agent = LinearSarsaAgent()
-    agent = ModelAgent()
+    #agent = ModelAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
