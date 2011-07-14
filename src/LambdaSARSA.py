@@ -2,6 +2,7 @@ import random
 import copy
 #TODO: check if my implementation is correct or not
 #TODO: add dynamic episilon
+#TODO: optimistic exploration with reduce epislon?
 class LambdaSARSA:
     def __init__(self, alpha, epsilon, gamma, actionList, initialQ, dumpCount ):
         self.alpha = alpha

@@ -2,6 +2,9 @@ import random
 from Def import getActionId
 
 #TODO: make it LambdaHORDQ, and add m=5 heuristic to init all table values, lambda does not propagate for 3 steps before
+#TODO: check if my implementation is correct or not
+#TODO: add dynamic episilon
+#TODO: optimistic exploration with reduce epislon?
 class LambdaHORDQ:
     def __init__(self, alpha, epsilon, gamma, actionList, initialQ, dumpCount, pseudoReward):
         self.alpha = alpha
@@ -45,6 +48,7 @@ class LambdaHORDQ:
             v = []
             for action in self.actionList:
                 q = self.getQ(observation, action)
+
                 if action == task:
                     #print task
                     #print action
