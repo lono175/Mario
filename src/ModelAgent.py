@@ -12,16 +12,20 @@ from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMar
 from Sim import Optimize
 
 NoTask = -1
+MaxStepReward = 2.0 
 class ModelAgent(Agent):
     def __init__(self):
         print "init"
         random.seed(0)
         self.actionList = getAllAction()
-        initialQ = 0
-        dumpCount = 100000
         pseudoReward = 6
+        gamma = 0.8
+        episilon = 0.03
+        alpha = 0.05
+        initialQ = MaxStepReward/(1-gamma)
+        dumpCount = 100000
         #self.agent = LinearHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
-        self.agent = LambdaHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
+        self.agent = LambdaHORDQ(alpha, episilon, gamma, self.actionList, initialQ, dumpCount, pseudoReward)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
