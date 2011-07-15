@@ -5,6 +5,7 @@ from Def import getActionId
 #TODO: check if my implementation is correct or not
 #TODO: add dynamic episilon
 #TODO: optimistic exploration with reduce epislon?
+#TODO: add monster speed:? (for pirahha flower)
 class LambdaHORDQ:
     def __init__(self, alpha, epsilon, gamma, actionList, initialQ, dumpCount, pseudoReward):
         self.alpha = alpha
@@ -36,6 +37,15 @@ class LambdaHORDQ:
                 self.Q[key] = self.initialQ #may use optimistic exploration
                 self.m[key] = 0
 
+    def getPossibleAction(self, observation):
+        possibleActionList = []
+        v = [self.getQ(observation, action) for action in self.actionList]
+        m = max(v)
+
+        for i, value in enumerate(v):
+            if value + self.pseudoReward >= m:
+                possibleActionList.append(self.actionList[i])
+        return possibleActionList 
     def selectAction(self, observation, task):
         #use epsilon-greedy
         if random.random() < self.epsilon:

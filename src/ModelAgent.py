@@ -6,7 +6,7 @@ from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
 #from LinearHORDQ import LinearHORDQ
 from LambdaHORDQ import LambdaHORDQ
-from ML import getCommonVar, getClassVar, Learner
+from ML import getCommonVar, getClassVar, Learner, ActionLearner
 from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit
 from Sim import Optimize
@@ -18,11 +18,13 @@ class ModelAgent(Agent):
         print "init"
         random.seed(0)
         self.actionList = getAllAction()
-        pseudoReward = 6
+        pseudoReward = 5
+        self.initPseudoReward = pseudoReward
         gamma = 0.8
-        episilon = 0.03
+        episilon = 0.00 #disable exploration for HORDQ
         alpha = 0.05
-        initialQ = MaxStepReward/(1-gamma)
+        #initialQ = MaxStepReward/(1-gamma)
+        initialQ = 0
         dumpCount = 100000
         #self.agent = LinearHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
         self.agent = LambdaHORDQ(alpha, episilon, gamma, self.actionList, initialQ, dumpCount, pseudoReward)
@@ -33,23 +35,22 @@ class ModelAgent(Agent):
         self.feaList = []
         self.rewardFeaList = []
         self.episodeNum = 0
-        self.epsilon = 0.00 #TODO: disable the exploration here
+        self.epsilon = 0.05 #TODO: disable the exploration here
 
         commonVar = getCommonVar()
         classVarList = getClassVar()
         rewardVar = orange.FloatVariable("reward")
-        isSeparateAction = True
-        self.DynamicLearner = Learner(commonVar, classVarList, isSeparateAction)
-        isSeparateAction = False
-        self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
+        self.RewardLearner = Learner(commonVar, [rewardVar])
+        commonVar.pop(0)
+        self.DynamicLearner = ActionLearner(commonVar, classVarList)
 
         self.lastPlan = []
 
         #self.obsList = [] #TODO: remove me
         
-    def planning(self, state):
-        MaxNode = 500
-        path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan)
+    def planning(self, state, initActionRange):
+        MaxNode = 2000
+        path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan, initActionRange)
         self.lastPlan = path
         return path[0]
 
@@ -63,10 +64,9 @@ class ModelAgent(Agent):
             commonVar = getCommonVar()
             classVarList = getClassVar()
             rewardVar = orange.FloatVariable("reward")
-            isSeparateAction = True
-            self.DynamicLearner = Learner(commonVar, classVarList, isSeparateAction)
-            isSeparateAction = False
-            self.RewardLearner = Learner(commonVar, [rewardVar],isSeparateAction)
+            self.RewardLearner = Learner(commonVar, [rewardVar])
+            commonVar.pop()
+            self.DynamicLearner = ActionLearner(commonVar, classVarList)
 
         #retrain the classifier for each different run
         self.DynamicLearner.add(self.feaList)
@@ -79,7 +79,8 @@ class ModelAgent(Agent):
         if self.DynamicLearner.empty() or self.RewardLearner.empty():
             action = self.agent.start(fea, NoTask)
         else:
-            action = self.planning(state)
+            possibleAction = self.agent.getPossibleAction(fea)
+            action = self.planning(state, possibleAction)
             action = self.agent.start(fea, action)
         self.stepNum = 0
         self.lastAction = action
@@ -112,10 +113,16 @@ class ModelAgent(Agent):
                 #select randomly
                 action = self.actionList[int(random.random()*len(self.actionList))]
             else:
-                action = self.planning(state)
-                print "planning", action
-                action = self.agent.step(reward, fea, action)
-                print "HORDQ", action
+                possibleAction = self.agent.getPossibleAction(fea)
+                if fea[0] == ():
+                    possibleAction == self.actionList
+                action = self.planning(state, possibleAction)
+
+            print "planning", action
+            self.agent.pseudoReward = 10000
+            action = self.agent.step(reward, fea, action)
+            self.agent.pseudoReward = self.initPseudoReward
+            print "HORDQ", action
 
         lastActionId = self.lastAction
 

@@ -7,7 +7,7 @@ from FeatureMario import MonType
 from Def import ActionRange
 class Learner:
     """A wrapper object to all machine learner"""
-    def __init__(self, commonVar, classVarList, isSeparateAction):
+    def __init__(self, commonVar, classVarList):
         #self.domain = orange.Domain(commonDomain, classDomain)
         self.domainList = []
         self.commonDomain = orange.Domain(commonVar)
@@ -17,19 +17,117 @@ class Learner:
         self.classNum = len(classVarList)
         self.feaNum = len(commonVar)
         self.treeList = []
+        self.FeatureNum = 28
 
     def add(self, dataList):
         if dataList != []:
-            self.treeList = getClassifier(dataList, self.domainList)
+            self.treeList = self.getClassifier(dataList, self.domainList)
 
     def getClass(self, data):
         assert(self.treeList != [])
-        partData = orange.Example(self.commonDomain, data[:FeatureNum])
+        partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
         res = [self.treeList[i](partData).value for i in range(self.classNum)]
         return res
 
     def empty(self):
         return self.treeList == []
+
+    # 3 + 25 + 4 classes= 32 
+    #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
+    def getClassifier(self, data, domainList):
+        dataList = []
+        i = 0
+        for domain in domainList:
+            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            table = orange.ExampleTable(domain, partData)
+            dataList.append(table)
+            i = i + 1
+
+            #tree = orange.TreeLearner(table)
+            #treeList.append(tree)
+
+        treeList = []
+        for data in dataList:
+            #tree = orngTree.TreeLearner()
+            #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
+            #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
+            #values=[0], verbose=2, \
+            #returnWhat=orngWrap.TuneParameters.returnClassifier)
+
+            #classifier = tunedTree(data)
+            classifier = orngTree.TreeLearner(data)
+            treeList.append(classifier)
+        return treeList
+
+class ActionLearner:
+    """A wrapper object to all machine learner"""
+    def __init__(self, commonVar, classVarList):
+        #self.domain = orange.Domain(commonDomain, classDomain)
+        self.domainList = []
+        #assume the first variable is action
+
+        self.commonDomain = orange.Domain(commonVar)
+        for classVar in classVarList:
+            domain = orange.Domain(commonVar, classVar)
+            self.domainList.append(domain)
+        self.classNum = len(classVarList)
+        self.feaNum = len(commonVar)
+        self.treeList = {}
+        self.FeatureNum = 27
+
+    def add(self, dataList):
+        newDataList = {}
+        for actionId in ActionRange:
+            newDataList[actionId] = []
+
+        #separate the action from data, assume actionId is the first entry in data
+        for data in dataList:
+            actionId = int(data[0])
+            newDataList[actionId].append(data[1:])
+
+        for actionId in ActionRange:
+            actionData = newDataList[actionId]
+            if actionData != []:
+                self.treeList[actionId] = self.getClassifier(actionData, self.domainList)
+
+
+    def getClass(self, data):
+        actionId = int(data[0])
+        data = data[1:]
+        assert(actionId in self.treeList)
+        partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
+        res = [self.treeList[actionId][i](partData).value for i in range(self.classNum)]
+        return res
+
+    def empty(self):
+        return len(self.treeList) == 0
+
+    # 2 + 25 + 4 classes= 31 
+    #[1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
+    def getClassifier(self, data, domainList):
+        dataList = []
+        i = 0
+        for domain in domainList:
+            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            table = orange.ExampleTable(domain, partData)
+            dataList.append(table)
+            i = i + 1
+
+            #tree = orange.TreeLearner(table)
+            #treeList.append(tree)
+
+        treeList = []
+        for data in dataList:
+            #tree = orngTree.TreeLearner()
+            #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
+            #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
+            #values=[0], verbose=2, \
+            #returnWhat=orngWrap.TuneParameters.returnClassifier)
+
+            #classifier = tunedTree(data)
+            classifier = orngTree.TreeLearner(data)
+            treeList.append(classifier)
+        return treeList
 
      
         
@@ -44,55 +142,6 @@ class Learner:
     #res = [treeList[i](partData[i]).value for i in range(classNum)]
     #return res
         
-
-def treeSize(node):
-    if not node:
-        return 0
-
-    size = 1
-    if node.branchSelector:
-        for branch in node.branches:
-            size += treeSize(branch)
-
-    return size
-
-
-def printTree0(node, level):
-    if not node:
-        #print " "*level + "<null node>"
-        return
-
-    if node.branchSelector:
-        nodeDesc = node.branchSelector.classVar.name
-        nodeCont = node.distribution
-        print "\n" + "   "*level + "%s (%s)" % (nodeDesc, nodeCont),
-        for i in range(len(node.branches)):
-            print "\n" + "   "*level + ": %s" % node.branchDescriptions[i],
-            printTree0(node.branches[i], level+1)
-    else:
-        nodeCont = node.distribution
-        majorClass = node.nodeClassifier.defaultValue
-        print "--> %s (%s) " % (majorClass, nodeCont),
-
-def printTree(x):
-    if type(x) == orange.TreeClassifier:
-        printTree0(x.tree, 0)
-    elif type(x) == orange.TreeNode:
-        printTree0(x, 0)
-    else:
-        raise TypeError, "invalid parameter"
-#SpeedRange = range(-2, 3)
-#DeltaRange = range(-4, 5)
-
-FeatureNum = 28
-
-#[-1, 1, 1] + [ord(' ') for x in range(25)] + [1, 1, 1, 1]
-#def convertData(data):
-    #newData = []
-    #for entry in data:
-        #newFormat = [str(entry[x]) for x in range(len(entry))] 
-        #newData.append(newFormat)
-    #return newData
 
 def getClassVar():
     classVarList = []
@@ -126,32 +175,6 @@ def getClassVar():
     #return classifier
 
 
-# 3 + 25 + 4 classes= 32 
-#[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
-def getClassifier(data, domainList):
-    dataList = []
-    i = 0
-    for domain in domainList:
-        partData = [(data[x][:FeatureNum] + [data[x][FeatureNum+i]]) for x in range(len(data))]
-        table = orange.ExampleTable(domain, partData)
-        dataList.append(table)
-        i = i + 1
-
-        #tree = orange.TreeLearner(table)
-        #treeList.append(tree)
-
-    treeList = []
-    for data in dataList:
-        #tree = orngTree.TreeLearner()
-        #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
-        #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
-        #values=[0], verbose=2, \
-        #returnWhat=orngWrap.TuneParameters.returnClassifier)
-
-        #classifier = tunedTree(data)
-        classifier = orngTree.TreeLearner(data)
-        treeList.append(classifier)
-    return treeList
     
 def getCommonVar():
     tileList = [' ', '$', 'b', '?', '|', '!', 'M', '1', '2', '3', '4', '5', '6', '7', 'w', '\n']

@@ -5,7 +5,7 @@ from FeatureMario import BlockLen
 import copy
 import random
 
-def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
+def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActionRange):
     print "--------------------"
     #initState.dump()
 
@@ -19,8 +19,12 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
     curState = copy.copy(initState)
     curState.path = [] #keep track of action path
     curState.reward = 0
-    AStarReward = 1000
-    heappush(nodeList, (AStarReward, curState)) #heappop returns the smallest item
+
+    for actionId in initActionRange:
+        state, isValid =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
+        if isValid:
+             AStarReward = state.reward + state.mario.x - initState.mario.x
+             heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
     defaultPath = [[9 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 11, 9], [9, 9, 11]] #right speed and right jump speed
 
@@ -31,6 +35,8 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
     #TODO: check if default path is valid or not (can jump and same state)
 
     for path in defaultPath:
+        if not path[0] in initActionRange:
+            continue
         state, isValid =  ExpandPath(path, curState, dynaLearner, rewardLearner)
         if not isValid:
             continue
@@ -38,7 +44,12 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan):
         AStarReward = state.reward + state.mario.x - initState.mario.x
         heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
-    negAStarReward, curState = heappop(nodeList)
+    #it is possible that nothing left here
+    if (len(nodeList) > 0):
+        negAStarReward, curState = heappop(nodeList)
+    else:
+        return [initActionRange[0]]
+
     #create the initial nodes for 12 actions, each node has 10 world states
     #TODO: add 10 initial states
     while (len(curState.path) < MinDepth) or ((len(nodeList) + len(outOfBoundList)) < MaxNode):
