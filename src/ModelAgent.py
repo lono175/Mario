@@ -65,7 +65,7 @@ class ModelAgent(Agent):
             classVarList = getClassVar()
             rewardVar = orange.FloatVariable("reward")
             self.RewardLearner = Learner(commonVar, [rewardVar])
-            commonVar.pop()
+            commonVar.pop(0)
             self.DynamicLearner = ActionLearner(commonVar, classVarList)
 
         #retrain the classifier for each different run

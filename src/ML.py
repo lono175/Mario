@@ -85,6 +85,9 @@ class ActionLearner:
             actionId = int(data[0])
             newDataList[actionId].append(data[1:])
 
+        #for debugging
+        for actionId in newDataList:
+            print "action id: ", actionId, " data size: ", len(newDataList[actionId])
         for actionId in ActionRange:
             actionData = newDataList[actionId]
             if actionData != []:
