@@ -15,6 +15,12 @@ def getTrainFeature(state, classValueList, actionId):
     assert(len(tileList) == 25)
     fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
+def getModelFeature(state, classValueList):
+    mario = state.mario
+    tileList = getTileAroundMario(state, BlockLen)
+    assert(len(tileList) == 25)
+    fea = [round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    return fea
 
 def getTileAroundMario(state, halfLen):
     m = state.mario

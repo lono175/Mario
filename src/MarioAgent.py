@@ -27,6 +27,20 @@ from ML import *
 import tool
 
 
+#statistics
+#begin:  284797
+#feaNum 137793
+#action id:  0  data size:  7721
+#action id:  1  data size:  6263
+#action id:  2  data size:  2764
+#action id:  3  data size:  1916
+#action id:  6  data size:  4222
+#action id:  8  data size:  15260
+#action id:  9  data size:  66449      
+#action id:  10  data size:  7250
+#action id:  11  data size:  25948
+
+
 from random import choice
 import string
 episilon = 0.005
@@ -39,7 +53,7 @@ def saveObj(obj):
     #dumpCount = 100000
     #self.agent = LinearSARSA(0.05, 0.05, 0.95, actionList, initialQ, dumpCount)
     #obj.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
-    obj.DynamicLearner = []
+    obj.DynamicLearner = {}
     obj.RewardLearner = []
     tool.Save(obj, "mario.db")
 
@@ -61,9 +75,9 @@ def GenPasswd2(length=8, chars=string.letters + string.digits):
 from ModelAgent import ModelAgent
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
+    agent = tool.Load("mario.db")
     #agent = LinearSarsaAgent()
-    agent = ModelAgent()
+    #agent = ModelAgent()
     atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)

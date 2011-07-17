@@ -1,3 +1,15 @@
+import random
+
+def SampleData(dataList, sampleNum):
+    sample = []
+    dataLen = len(dataList)
+    i = 0
+    for data in dataList:
+        if i == sampleNum:
+           break 
+        sample.append(dataList[random.randint(0, dataLen-1)])
+        i = i + 1
+    return sample
 
 def getMarioLoc(observation, size):
     height, width = size

@@ -5,9 +5,12 @@ import orange, random
 import orngWrap, orngTree
 from FeatureMario import MonType
 from Def import ActionRange
+from tool import SampleData
+from numpy import array
+
 class Learner:
     """A wrapper object to all machine learner"""
-    def __init__(self, commonVar, classVarList):
+    def __init__(self, commonVar, classVarList, maxFeature):
         #self.domain = orange.Domain(commonDomain, classDomain)
         self.domainList = []
         self.commonDomain = orange.Domain(commonVar)
@@ -15,9 +18,9 @@ class Learner:
             domain = orange.Domain(commonVar, classVar)
             self.domainList.append(domain)
         self.classNum = len(classVarList)
-        self.feaNum = len(commonVar)
         self.treeList = []
-        self.FeatureNum = 28
+        self.FeatureNum = len(commonVar)
+        self.maxFeature = maxFeature
 
     def add(self, dataList):
         if dataList != []:
@@ -29,9 +32,115 @@ class Learner:
         res = [self.treeList[i](partData).value for i in range(self.classNum)]
         return res
 
+    def getClassTree(self, data, treeList):
+        partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
+        res = [treeList[i](partData).value for i in range(self.classNum)]
+        return res
+
     def empty(self):
         return self.treeList == []
 
+    def TestPerformance(self, dataList, treeList):
+        #now test it
+        correctNum = 0
+        errNum = 0
+        avgError = numpy.array([0 for i in range(self.classNum)])
+
+        for data in dataList:
+            classVar = data[self.FeatureNum:]
+            predict = self.getClassTree(data, treeList) 
+            predict = [round(v, 1) for v in predict]
+            avgError = avgError + abs(array(predict) - array(classVar))
+            #print "---"
+            #print classVar
+            #print predict
+            if predict == classVar:
+                correctNum = correctNum + 1
+            else:
+                errNum = errNum + 1
+        #else:
+
+            #print classVar
+            #print predict
+            #print "----"
+        #print "correct: ", correctNum
+        #print "incorrect: ", errNum
+        avgError = avgError / (correctNum + errNum)
+        #print avgError
+        return correctNum
+
+    def getNewData(self, newDataList, dataList, bestTree, minFeature):
+        i = len(newDataList)
+        corNum = 0
+        for data in dataList:
+            if i >= minFeature:
+                break
+
+            classVar = data[self.FeatureNum:]
+            predict = self.getClassTree(data, bestTree) 
+            predict = [round(v, 1) for v in predict]
+            if predict != classVar:
+                newDataList.append(data)
+                i = i + 1
+            #else:
+                #corNum = corNum + 1
+        #print "correct ", corNum
+        return newDataList
+    #prune the dataList and return a new one
+    def prune(self, dataList):
+
+        sampleRatio = 1.0
+        minFeature = self.maxFeature
+        #maxFeature = 2000
+
+        feaLen = len(dataList)
+        if feaLen < 2*minFeature:
+            tree = self.getClassifier(dataList, self.domainList)
+            return dataList, tree
+
+        maxCorrect = -1
+        #do it 5 times, choose the best one
+        for i in range(5):
+
+            #randomly build a tree from 5% data
+            sample = SampleData(dataList, int(sampleRatio*minFeature))
+            tree = self.getClassifier(sample, self.domainList)
+
+            correctNum = self.TestPerformance(dataList, tree)
+            if correctNum > maxCorrect:
+                bestTree = tree
+                maxCorrect = correctNum
+                bestSample = sample
+        print "best: ", maxCorrect               
+        print "sample size: ", len(bestSample)
+        print "ori len ", len(dataList)
+
+        #random.shuffle(dataList)
+        #newDataList = bestSample
+        #self.getNewData(newDataList, dataList, bestTree, minFeature)
+
+        ##add data up minFeature
+        #print "ori len ", len(dataList)
+        #print "new len ", len(newDataList)
+
+        #tree = self.getClassifier(newDataList, self.domainList)
+        #corNum = self.TestPerformance(dataList, tree)
+        #print "first refit correct ", corNum
+
+        #random.shuffle(dataList)
+        #newDataList = self.getNewData(newDataList, dataList, tree, minFeature + 1000)
+        #tree = self.getClassifier(newDataList, self.domainList)
+        #corNum = self.TestPerformance(dataList, tree)
+        #print "refit new len ", len(newDataList)
+        #print "refit correct ", corNum
+
+        #tree = self.getClassifier(dataList, self.domainList)
+        #corNum = self.TestPerformance(dataList, tree)
+        #print "ori correct ", corNum
+        
+        return bestSample, bestTree
+
+        
     # 3 + 25 + 4 classes= 32 
     #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
     def getClassifier(self, data, domainList):
@@ -58,79 +167,173 @@ class Learner:
             classifier = orngTree.TreeLearner(data)
             treeList.append(classifier)
         return treeList
+#class ActionLearner:
+    #"""A wrapper object to all machine learner"""
+    #def __init__(self, commonVar, classVarList):
+        ##self.domain = orange.Domain(commonDomain, classDomain)
+        #self.domainList = []
+        ##assume the first variable is action
 
-class ActionLearner:
-    """A wrapper object to all machine learner"""
-    def __init__(self, commonVar, classVarList):
-        #self.domain = orange.Domain(commonDomain, classDomain)
-        self.domainList = []
-        #assume the first variable is action
+        #self.commonDomain = orange.Domain(commonVar)
+        #for classVar in classVarList:
+            #domain = orange.Domain(commonVar, classVar)
+            #self.domainList.append(domain)
+        #self.classNum = len(classVarList)
+        #self.feaNum = len(commonVar)
+        #self.treeList = {}
+        #self.FeatureNum = 27
 
-        self.commonDomain = orange.Domain(commonVar)
-        for classVar in classVarList:
-            domain = orange.Domain(commonVar, classVar)
-            self.domainList.append(domain)
-        self.classNum = len(classVarList)
-        self.feaNum = len(commonVar)
-        self.treeList = {}
-        self.FeatureNum = 27
+    #def add(self, dataList):
+        #newDataList = getActionData(dataList)
 
-    def add(self, dataList):
-        newDataList = {}
-        for actionId in ActionRange:
-            newDataList[actionId] = []
-
-        #separate the action from data, assume actionId is the first entry in data
-        for data in dataList:
-            actionId = int(data[0])
-            newDataList[actionId].append(data[1:])
-
-        #for debugging
-        for actionId in newDataList:
-            print "action id: ", actionId, " data size: ", len(newDataList[actionId])
-        for actionId in ActionRange:
-            actionData = newDataList[actionId]
-            if actionData != []:
-                self.treeList[actionId] = self.getClassifier(actionData, self.domainList)
+        ##for debugging
+        #for actionId in newDataList:
+            #print "action id: ", actionId, " data size: ", len(newDataList[actionId])
+        #for actionId in ActionRange:
+            #actionData = newDataList[actionId]
+            #if actionData != []:
+                #self.treeList[actionId] = self.getClassifier(actionData, self.domainList)
 
 
-    def getClass(self, data):
-        actionId = int(data[0])
-        data = data[1:]
-        assert(actionId in self.treeList)
-        partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
-        res = [self.treeList[actionId][i](partData).value for i in range(self.classNum)]
-        return res
+    #def getActionClass(self, data, actionId, treeList):
+        #assert(actionId in self.treeList)
+        #partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
+        #res = [treeList[actionId][i](partData).value for i in range(self.classNum)]
+        #return res
 
-    def empty(self):
-        return len(self.treeList) == 0
+    #def getClass(self, data, treeList):
+        #actionId = int(data[0])
+        #data = data[1:]
+        #self.getActionClass(data, actionId, treeList)
+        #return res
 
-    # 2 + 25 + 4 classes= 31 
-    #[1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
-    def getClassifier(self, data, domainList):
-        dataList = []
-        i = 0
-        for domain in domainList:
-            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
-            table = orange.ExampleTable(domain, partData)
-            dataList.append(table)
-            i = i + 1
+    #def empty(self):
+        #return len(self.treeList) == 0
 
-            #tree = orange.TreeLearner(table)
-            #treeList.append(tree)
+    #def TestPerformance(self, actionDataList, treeList):
+        ##now test it
+        #correctNum = 0
+        #correctAction = {}
+        #incAction = {}
+        #avgError = {}
+        #for actionId in ActionRange:
+            #correctAction[actionId] = 0
+            #incAction[actionId] = 0
+            #avgError[actionId] = array([0, 0, 0, 0])
 
-        treeList = []
-        for data in dataList:
-            #tree = orngTree.TreeLearner()
-            #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
-            #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
-            #values=[0], verbose=2, \
-            #returnWhat=orngWrap.TuneParameters.returnClassifier)
+            #actionData = actionDataList[actionId] 
+            #for data in actionData:
+                #classVar = data[self.FeatureNum:]
+                #predict = self.getActionClass(data, actionId, treeList) 
+                #predict = [round(v, 1) for v in predict]
+                #avgError[actionId] = avgError[actionId] + abs(array(predict) - array(classVar))
+                ##print "---"
+                ##print classVar
+                ##print predict
+                #if predict == classVar:
+                    #correctNum = correctNum + 1
+                    #correctAction[actionId] = correctAction[actionId] + 1
+                #else:
+                    #incAction[actionId] = incAction[actionId] + 1
+            ##else:
 
-            #classifier = tunedTree(data)
-            classifier = orngTree.TreeLearner(data)
-            treeList.append(classifier)
-        return treeList
+                ##print classVar
+                ##print predict
+                ##print "----"
+        #print "correct: ", correctNum
+        #print correctAction
+        #print incAction
+        #for actionId in ActionRange:
+            #avgError[actionId] = avgError[actionId] / (correctAction[actionId] + incAction[actionId])
+        #print avgError
+        #return correctNum
+        #
+    ##prune the dataList and return a new one
+    ##the current classifier will be replaced by one with the new data set
+    #def prune(self, dataList):
+
+        #feaLen = len(dataList)
+        #if feaLen < maxFeature:
+            #return 
+
+        #sampleRatio = 0.10
+        #minFeature = 10000
+        #maxFeature = 20000
+        #ratioPerAction = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.15, 0.1, 0.15]
+
+        #samplePerAction = {}
+        #for i, actionId in enumerate(ActionRange):
+            #samplePerAction[actionId] = int(minFeature*sampleRatio*ratioPerAction[i]) 
+
+        #dataPerAction = {}
+        #for i, actionId in enumerate(ActionRange):
+            #dataPerAction[actionId] = int(minFeature*ratioPerAction[i]) 
+
+        #actionDataList = GetActionData(dataList)
+
+
+
+        #maxCorrect = -1
+        ##do it 5 times, choose the best one
+        #for i in range(5):
+
+            #actionSample = {}
+            #actionTree = {}
+
+            ##randomly build a tree from 5% data
+            #for actionId in actionDataList:
+                #sample = SampleData(actionDataList[actionId], samplePerAction[actionId])
+                #actionSample[actionId] = sample
+                #tree = self.getClassifier(sample, self.domainList)
+                #actionTree[actionId] = tree 
+
+            #correctNum = self.TestPerformance(actionDataList, actionTree)
+            #if correctNum > maxCorrect:
+                #bestTree = actionTree
+        #print "best: ", maxCorrect               
+
+        #newActionDataList = {}
+        ##add data up minFeature
+        #for actionId in actionDataList:
+            #actionData = []
+            #i = 0
+            #random.shuffle(actionDataList[actionId])
+            #for data in actionDataList[actionId]
+                #if i >= dataPerAction[actionId]:
+                    #break
+
+                #classVar = data[self.FeatureNum:]
+                #predict = self.getActionClass(data, actionId, bestTree) 
+                #predict = [round(v, 1) for v in predict]jkkkkk
+                #if predict != classVar:
+                    #actionData.append
+        #
+    ## 2 + 25 + 4 classes= 31 
+    ##[1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
+    #def getClassifier(self, data, domainList):
+        #dataList = []
+        #i = 0
+        #for domain in domainList:
+            #partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            #table = orange.ExampleTable(domain, partData)
+            #dataList.append(table)
+            #i = i + 1
+
+            ##tree = orange.TreeLearner(table)
+            ##treeList.append(tree)
+
+        #treeList = []
+        #for data in dataList:
+            ##tree = orngTree.TreeLearner()
+            ##tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
+            ##values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
+            ##values=[0], verbose=2, \
+            ##returnWhat=orngWrap.TuneParameters.returnClassifier)
+
+            ##classifier = tunedTree(data)
+            #classifier = orngTree.TreeLearner(data)
+            #treeList.append(classifier)
+        #return treeList
 
      
         

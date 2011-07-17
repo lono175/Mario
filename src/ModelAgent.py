@@ -6,17 +6,18 @@ from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
 #from LinearHORDQ import LinearHORDQ
 from LambdaHORDQ import LambdaHORDQ
-from ML import getCommonVar, getClassVar, Learner, ActionLearner
+from ML import getCommonVar, getClassVar, Learner
 from WorldState import WorldState
-from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit
+from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit, getModelFeature
 from Sim import Optimize
-
+from numpy import array 
 NoTask = -1
 MaxStepReward = 2.0 
+
 class ModelAgent(Agent):
     def __init__(self):
         print "init"
-        random.seed(0)
+        random.seed()
         self.actionList = getAllAction()
         pseudoReward = 5
         self.initPseudoReward = pseudoReward
@@ -32,51 +33,74 @@ class ModelAgent(Agent):
         self.totalStep = 0
         self.rewardList = []
         self.distList = []
-        self.feaList = []
+
+        self.feaList = {}
+        for action in self.actionList:
+            self.feaList[action] = []
+
         self.rewardFeaList = []
         self.episodeNum = 0
         self.epsilon = 0.05 #TODO: disable the exploration here
 
-        commonVar = getCommonVar()
-        classVarList = getClassVar()
-        rewardVar = orange.FloatVariable("reward")
-        self.RewardLearner = Learner(commonVar, [rewardVar])
-        commonVar.pop(0)
-        self.DynamicLearner = ActionLearner(commonVar, classVarList)
 
         self.lastPlan = []
+        self.DynamicLearner = {}
 
         #self.obsList = [] #TODO: remove me
         
+    
+    #prune both dynamic and reward data
+    def prune(self):
+
+
+        for action in self.actionList:
+            self.feaList[action], self.DynamicLearner[action].treeList = self.DynamicLearner[action].prune(self.feaList[action])
+        self.rewardFeaList, self.RewardLearner.treeList = self.RewardLearner.prune(self.rewardFeaList)
+
+        
     def planning(self, state, initActionRange):
-        MaxNode = 2000
+        MaxNode = 700
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan, initActionRange)
         self.lastPlan = path
         return path[0]
+
+    def initLearner(self):
+        if self.DynamicLearner == {}:
+            commonVar = getCommonVar()
+            classVarList = getClassVar()
+            rewardVar = orange.FloatVariable("reward")
+            self.RewardLearner = Learner(commonVar, [rewardVar], 5000)
+            commonVar.pop(0)
+            for action in self.actionList:
+                if action == 9:
+                    maxFeature = 5000
+                else:
+                    maxFeature = 1500
+                self.DynamicLearner[action] = Learner(commonVar, classVarList, maxFeature)
 
     def agent_init(self, taskSpecString):
 
         #parse action
         print "begin: ", self.totalStep
-        print "feaNum", len(self.feaList)
+        feaNum = len(self.rewardFeaList)
+        print "feaNum", feaNum
+
+        self.initLearner()
+        if feaNum == 0:
+            return
         
-        if self.DynamicLearner == []:
-            commonVar = getCommonVar()
-            classVarList = getClassVar()
-            rewardVar = orange.FloatVariable("reward")
-            self.RewardLearner = Learner(commonVar, [rewardVar])
-            commonVar.pop(0)
-            self.DynamicLearner = ActionLearner(commonVar, classVarList)
+        self.prune()
 
         #retrain the classifier for each different run
-        self.DynamicLearner.add(self.feaList)
-        self.RewardLearner.add(self.rewardFeaList)
+        #for action in self.actionList:
+            #self.DynamicLearner[action].add(self.feaList[action])
+        #self.RewardLearner.add(self.rewardFeaList)
 
     def agent_start(self, obs):
         state = WorldState(obs)
         self.lastState = state
         fea = getSarsaFeature(state, NoTask)
-        if self.DynamicLearner.empty() or self.RewardLearner.empty():
+        if self.RewardLearner.empty():
             action = self.agent.start(fea, NoTask)
         else:
             possibleAction = self.agent.getPossibleAction(fea)
@@ -104,7 +128,7 @@ class ModelAgent(Agent):
             print "in pit !!!!!!!"
             #reward = reward + InPitPenalty #no pit penalty for HORDQ
             modelReward = InPitPenalty
-        if self.DynamicLearner.empty() or self.RewardLearner.empty():
+        if self.RewardLearner.empty():
             #fea = getSarsaFeature(obs)
             action = self.agent.step(reward, fea, NoTask)
         else:
@@ -114,7 +138,7 @@ class ModelAgent(Agent):
                 action = self.actionList[int(random.random()*len(self.actionList))]
             else:
                 possibleAction = self.agent.getPossibleAction(fea)
-                if fea[0] == ():
+                if fea[0] == (): #if not monster around, pass control to the planner
                     possibleAction == self.actionList
                 action = self.planning(state, possibleAction)
 
@@ -122,7 +146,6 @@ class ModelAgent(Agent):
             self.agent.pseudoReward = 10000
             action = self.agent.step(reward, fea, action)
             self.agent.pseudoReward = self.initPseudoReward
-            print "HORDQ", action
 
         lastActionId = self.lastAction
 
@@ -131,20 +154,21 @@ class ModelAgent(Agent):
         
         classVar = [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
         rewardClassVar = [round(modelReward, 0)]
-        modelFea = getTrainFeature(self.lastState, classVar, lastActionId)
+        modelFea = getModelFeature(self.lastState, classVar)
         rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
 
-        if not self.DynamicLearner.empty():
-            predictModelClass = self.DynamicLearner.getClass(modelFea)
+        if not self.RewardLearner.empty(): #TODO: too dirty
+
+            predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
             predictModelClass = [round(v, 1) for v in predictModelClass]
             print "feature: ", modelFea
             print "predict: ", predictModelClass
             if not classVar == predictModelClass:
-                self.feaList.append(modelFea)
+                self.feaList[lastActionId].append(modelFea)
             else:
                 print "pass model-------------"
         else:
-            self.feaList.append(modelFea)
+            self.feaList[lastActionId].append(modelFea)
 
 
         if not self.RewardLearner.empty():
@@ -167,7 +191,7 @@ class ModelAgent(Agent):
 
         return makeAction(action)
 
-    def agent_end(self,reward):
+    def agent_end(self, reward):
         modelReward = reward
         if reward == -10.0:
             reward = DeathPenalty

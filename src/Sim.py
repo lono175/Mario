@@ -110,14 +110,19 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
 def ExpandPath(path, state, dynaLearner, rewardLearner):
     for actionId in path:
         fea = getTestFeature(state, actionId)
-        m = state.mario
-        sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
+
+        #WARNING!! Don't change the order
+        reward, = rewardLearner.getClass(fea)
+
+        actionId = int(fea[0])
+        fea.pop(0)
+        sx, sy, dx, dy = dynaLearner[actionId].getClass(fea) #TODO: add randomness here
         sx = round(sx, 1) 
         sy = round(sy, 1)
         dx = round(dx, 1)
         dy = round(dy, 1)
-        reward, = rewardLearner.getClass(fea)
 
+        m = state.mario
         newMario = copy.deepcopy(m)
         
         newMario.x = m.x + m.sx + dx
@@ -132,7 +137,9 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
         newState.path.append(actionId)
 
         dir, isJump, isSpeed = getActionType(actionId)
-        if (not (newState.mario.sy >= 0 and isJump)) and (newState.mario != state.mario): #Jump does not increase y-speed, do not need to search anymore
+        if (not (newState.mario.sy >= 0 and isJump)) and not (sx == 0.0 and sy == 0.0 and dx == 0.0 and dy == 0.0): #Jump does not increase y-speed, do not need to search anymore
+            if newState.mario.sx == 0.0 and newState.mario.sy == 0.0 and dx == 0.0 and dy == 0:
+                print "Mario Warning: ", newState.mario.sx, " ", newState.mario.sy, " ", newState.mario.x, " ", newState.mario.y
             state = newState
             isValid = True
         else:
@@ -143,28 +150,28 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
 #WorldState, listof decision trees -> listof ActionState
 #treeList includes the reward tree
 #sample the effect of all actions for the mario state
-def Expand(state, dynaLearner, rewardLearner):
-    newStateList = []
-    for actionId in ActionRange:
-        fea = getTestFeature(state, actionId)
-        m = state.mario
-        sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
-        reward, = rewardLearner.getClass(fea)
+#def Expand(state, dynaLearner, rewardLearner):
+    #newStateList = []
+    #for actionId in ActionRange:
+        #fea = getTestFeature(state, actionId)
+        #m = state.mario
+        #sx, sy, dx, dy = dynaLearner.getClass(fea) #TODO: add randomness here
+        #reward, = rewardLearner.getClass(fea)
 
-        newMario = copy.deepcopy(m)
-        
-        newMario.x = m.x + m.sx + dx
-        newMario.y = m.y + m.sy + dy
-        newMario.sx = sx
-        newMario.sy = sy
+        #newMario = copy.deepcopy(m)
+        #
+        #newMario.x = m.x + m.sx + dx
+        #newMario.y = m.y + m.sy + dy
+        #newMario.sx = sx
+        #newMario.sy = sy
 
-        newState = copy.copy(state) #with static assumption, everything other than mario stays the same
-        newState.path = copy.copy(state.path)
-        newState.mario = newMario
-        newState.reward = reward + state.reward
-        newState.path.append(actionId)
-        newStateList.append(newState)
-    return newStateList
+        #newState = copy.copy(state) #with static assumption, everything other than mario stays the same
+        #newState.path = copy.copy(state.path)
+        #newState.mario = newMario
+        #newState.reward = reward + state.reward
+        #newState.path.append(actionId)
+        #newStateList.append(newState)
+    #return newStateList
         
 #def classify(data, treeList, domainList):
     #classNum = len(domainList)
