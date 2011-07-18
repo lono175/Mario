@@ -69,13 +69,13 @@ class ModelAgent(Agent):
             commonVar = getCommonVar()
             classVarList = getClassVar()
             rewardVar = orange.FloatVariable("reward")
-            self.RewardLearner = Learner(commonVar, [rewardVar], 5000)
+            self.RewardLearner = Learner(commonVar, [rewardVar], 6000)
             commonVar.pop(0)
             for action in self.actionList:
                 if action == 9:
-                    maxFeature = 5000
+                    maxFeature = 6000
                 else:
-                    maxFeature = 1500
+                    maxFeature = 3000
                 self.DynamicLearner[action] = Learner(commonVar, classVarList, maxFeature)
 
     def agent_init(self, taskSpecString):
@@ -116,10 +116,12 @@ class ModelAgent(Agent):
             #reward = -1
 
         state = WorldState(obs)
+
+        state.dump()
         fea = getSarsaFeature(state, self.lastAction)
         lastMario = self.lastState.mario
         mario = state.mario #for internal reward system
-        #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
+        print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         dx = mario.x - lastMario.x
 
         reward = reward + dx
@@ -151,8 +153,10 @@ class ModelAgent(Agent):
 
         deltaX = mario.x - (lastMario.x + lastMario.sx)
         deltaY = mario.y - (lastMario.y + lastMario.sy)
+        aX = mario.sx - lastMario.sx 
+        aY = mario.sy - lastMario.sy 
         
-        classVar = [round(mario.sx, 1), round(mario.sy, 1), round(deltaX, 1), round(deltaY, 1)]
+        classVar = [round(aX, 1), round(aY, 1), round(deltaX, 1), round(deltaY, 1)]
         rewardClassVar = [round(modelReward, 0)]
         modelFea = getModelFeature(self.lastState, classVar)
         rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
@@ -161,7 +165,7 @@ class ModelAgent(Agent):
 
             predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
             predictModelClass = [round(v, 1) for v in predictModelClass]
-            print "feature: ", modelFea
+            print "feature: ", lastActionId, " ", modelFea
             print "predict: ", predictModelClass
             if not classVar == predictModelClass:
                 self.feaList[lastActionId].append(modelFea)

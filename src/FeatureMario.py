@@ -6,20 +6,26 @@ def getTestFeature(state, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    offsetX = round(mario.x - int(mario.x), 1)
+    offsetY = round(mario.y - int(mario.y), 1)
+    fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
     return fea
 
 def getTrainFeature(state, classValueList, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    offsetX = round(mario.x - int(mario.x), 1)
+    offsetY = round(mario.y - int(mario.y), 1)
+    fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 def getModelFeature(state, classValueList):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    fea = [round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    offsetX = round(mario.x - int(mario.x), 1)
+    offsetY = round(mario.y - int(mario.y), 1)
+    fea = [offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 
 def getTileAroundMario(state, halfLen):
@@ -35,6 +41,7 @@ def isMarioInPit(state):
 
     for pit in pitList:
         if mx >= pit.x and mx < (pit.x + pit.width) and my >= pit.y and my < (pit.y+pit.height):
+            print "pit: ", mx, " ", my, " ", pit.x, " ", pit.y
             return True
     return False
 
@@ -45,7 +52,10 @@ def getTileBlock(monMap, inX, inY, halfLen):
     for y in range(-halfLen + inY, halfLen + inY + 1):
         for x in range(-halfLen + inX, halfLen + inX + 1):
             if (not x in range(MaxX)) or (not y in range(MaxY)):
-                tile = ord('w') #the end of the world
+                if x < 0:
+                    tile = ord('w')
+                else:
+                    tile = ord(' ') #the end of the world
             else:
                 tile = monMap[y, x]
             res.append(tile)

@@ -159,6 +159,7 @@ def getMonsterGridMap(obs):
     if not x in range(MaxX) or not y in range(MaxY):
         print "out of boundary:", x, " ", y
     else:
+        assert(map[y, x] == ord('M'))
         map[y, x] = ord(' ')
 
     #add monster

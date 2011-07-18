@@ -3,6 +3,8 @@
 
 import orange, random
 import orngWrap, orngTree
+from Orange.classification.svm import SVMLearner, SVMLearnerEasy
+
 from FeatureMario import MonType
 from Def import ActionRange
 from tool import SampleData
@@ -58,15 +60,16 @@ class Learner:
                 correctNum = correctNum + 1
             else:
                 errNum = errNum + 1
+                #print data
+                #print classVar
+                #print predict
+                #print "----"
         #else:
 
-            #print classVar
-            #print predict
-            #print "----"
-        #print "correct: ", correctNum
-        #print "incorrect: ", errNum
+        print "correct: ", correctNum
+        print "incorrect: ", errNum
         avgError = avgError / (correctNum + errNum)
-        #print avgError
+        print avgError
         return correctNum
 
     def getNewData(self, newDataList, dataList, bestTree, minFeature):
@@ -140,6 +143,59 @@ class Learner:
         
         return bestSample, bestTree
 
+    def getKnnClassifier(self, data, domainList):
+        dataList = []
+        i = 0
+        for domain in domainList:
+            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            table = orange.ExampleTable(domain, partData)
+            dataList.append(table)
+            i = i + 1
+
+            #tree = orange.TreeLearner(table)
+            #treeList.append(tree)
+
+        treeList = []
+        for data in dataList:
+            #tree = orngTree.TreeLearner()
+            #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
+            #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
+            #values=[0], verbose=2, \
+            #returnWhat=orngWrap.TuneParameters.returnClassifier)
+
+            #classifier = tunedTree(data)
+            print "begin training...."
+            knn = orange.kNNLearner(data, k=1)
+            print "finish training"
+            treeList.append(knn)
+        return treeList
+    def getSVMClassifier(self, data, domainList):
+        dataList = []
+        i = 0
+        for domain in domainList:
+            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            table = orange.ExampleTable(domain, partData)
+            dataList.append(table)
+            i = i + 1
+
+            #tree = orange.TreeLearner(table)
+            #treeList.append(tree)
+
+        treeList = []
+        for data in dataList:
+            #tree = orngTree.TreeLearner()
+            #tunedTree = orngWrap.Tune1Parameter(object=tree, parameter='m_pruning', \
+            #values=[0, 0.1, 0.2, 1, 2, 5, 10], verbose=2, \
+            #values=[0], verbose=2, \
+            #returnWhat=orngWrap.TuneParameters.returnClassifier)
+
+            #classifier = tunedTree(data)
+            svr = SVMLearnerEasy(svm_type=SVMLearner.Epsilon_SVR)
+            print "begin training...."
+            classifier = svr(data)
+            print "finish training"
+            treeList.append(classifier)
+        return treeList
         
     # 3 + 25 + 4 classes= 32 
     #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
@@ -390,6 +446,10 @@ def getCommonVar():
 
     domain = []
     var = orange.EnumVariable("action", values = ['%i'%x for x in ActionRange])
+    domain.append(var)
+    var = orange.FloatVariable("x-offset")
+    domain.append(var)
+    var = orange.FloatVariable("y-offset")
     domain.append(var)
     var = orange.FloatVariable("x-speed")
     domain.append(var)

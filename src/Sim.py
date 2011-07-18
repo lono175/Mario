@@ -59,8 +59,8 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
         while isOutOfBound and len(nodeList) > 0:
             negAStarReward, curState = heappop(nodeList)
             mario = curState.mario
-            x = int(mario.x - curState.origin)
-            y = int(mario.y)
+            #x = int(mario.x - curState.origin)
+            #y = int(mario.y)
             #if not x in range(MaxX - BlockLen) or not y in range(MaxY) or len(curState.path) > MaxDepth:
             if len(curState.path) > MaxDepth or curState.reward <= InPitPenalty:
                 isOutOfBound = True
@@ -116,13 +116,16 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
 
         actionId = int(fea[0])
         fea.pop(0)
-        sx, sy, dx, dy = dynaLearner[actionId].getClass(fea) #TODO: add randomness here
-        sx = round(sx, 1) 
-        sy = round(sy, 1)
+        ax, ay, dx, dy = dynaLearner[actionId].getClass(fea) #TODO: add randomness here
+        ax = round(ax, 1) 
+        ay = round(ay, 1)
         dx = round(dx, 1)
         dy = round(dy, 1)
 
         m = state.mario
+
+        sx = round(ax + m.sx, 1)
+        sy = round(ay + m.sy, 1)
         newMario = copy.deepcopy(m)
         
         newMario.x = m.x + m.sx + dx
