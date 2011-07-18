@@ -48,7 +48,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     if (len(nodeList) > 0):
         negAStarReward, curState = heappop(nodeList)
     else:
-        return [initActionRange[0]]
+        return [initActionRange[random.randint(0, len(initActionRange)-1)]]
 
     #create the initial nodes for 12 actions, each node has 10 world states
     #TODO: add 10 initial states
@@ -108,6 +108,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
 
     
 def ExpandPath(path, state, dynaLearner, rewardLearner):
+
     for actionId in path:
         fea = getTestFeature(state, actionId)
 

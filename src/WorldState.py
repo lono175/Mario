@@ -84,9 +84,9 @@ def getPitList(obs):
             if map[y, pit.x-1] in emptyTile:
                 pit.y = y+1
                 pit.height = MaxY - pit.y
+                assert(pit.y >= 0)
+                newPitList.append(pit)
                 break
-        assert(pit.y >= 0)
-        newPitList.append(pit)
 
     #check if the pit has a "lid" on it
     pitList = []

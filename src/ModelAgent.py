@@ -9,7 +9,7 @@ from LambdaHORDQ import LambdaHORDQ
 from ML import getCommonVar, getClassVar, Learner
 from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit, getModelFeature
-from Sim import Optimize
+from Sim import Optimize, ExpandPath
 from numpy import array 
 NoTask = -1
 MaxStepReward = 2.0 
@@ -46,7 +46,7 @@ class ModelAgent(Agent):
         self.lastPlan = []
         self.DynamicLearner = {}
 
-        #self.obsList = [] #TODO: remove me
+        self.obsList = [] #TODO: remove me
         
     
     #prune both dynamic and reward data
@@ -117,11 +117,9 @@ class ModelAgent(Agent):
 
         state = WorldState(obs)
 
-        state.dump()
         fea = getSarsaFeature(state, self.lastAction)
         lastMario = self.lastState.mario
         mario = state.mario #for internal reward system
-        print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         dx = mario.x - lastMario.x
 
         reward = reward + dx
@@ -141,13 +139,30 @@ class ModelAgent(Agent):
             else:
                 possibleAction = self.agent.getPossibleAction(fea)
                 if fea[0] == (): #if not monster around, pass control to the planner
-                    possibleAction == self.actionList
+                    possibleAction = self.actionList
                 action = self.planning(state, possibleAction)
 
             print "planning", action
             self.agent.pseudoReward = 10000
             action = self.agent.step(reward, fea, action)
             self.agent.pseudoReward = self.initPseudoReward
+        #state.dump()
+        #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
+        #state.path = []
+        #state.reward = 0
+
+        #nextState, isValid =  ExpandPath([0], state, self.DynamicLearner, self.RewardLearner)
+
+        #nextState.dump()
+        #print "pred loc:", nextState.mario.x , " ", nextState.mario.y, " ", nextState.mario.sx, " ", nextState.mario.sy
+        #print "backoff reward: ", nextState.reward
+
+        #nextState, isValid =  ExpandPath([action], state, self.DynamicLearner, self.RewardLearner)
+        #nextState.dump()
+        #print "pred loc:", nextState.mario.x , " ", nextState.mario.y, " ", nextState.mario.sx, " ", nextState.mario.sy
+        #print "pred rewar:", action, " ", nextState.reward
+
+
 
         lastActionId = self.lastAction
 
