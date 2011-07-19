@@ -5,6 +5,86 @@ from FeatureMario import BlockLen
 import copy
 import random
 
+#TODO: check id here, no need to have multiple monsterList or gridMap
+#TODO: remove x offset and y offset
+class SimState(object):
+    #listof WorldState (contains all possible outcome of certain path)
+    #listof log-likelihood (the probability for each WorldState)
+    #listof reward      (the reward for each WorldState)
+    #listof int (path)
+    #expected reward for the current world state (real reward and A* reward)
+    def __init__(self):
+        pass
+    def __init__(self, state):
+        self.worldList = copy.copy(state.worldList)
+        self.probList = copy.copy(state.probList)
+        self.rewardList = copy.copy(state.rewardList)
+        self.path = copy.copy(state.path)
+    #return the expected reward for all possible path (times probability)
+    def reward(self):
+        pass
+
+#ContDistribution -> val, probability
+def GetSample(contDist):
+    probList = contDist.values()
+    disc = orange.DiscDistribution(probList) 
+    index = disc.random()
+    prob = probList[index]
+    val = contDist.keys()[index]
+    return val, prob
+
+#listof int, SimState, Learner, Learner, int -> lisof SimState       
+def ExpandPath(path, inState, dynaLearner, rewardLearner, sampleNum):
+    isFirst = True
+    state = SimState(inState)
+    state.path.append(path)
+    for actionId in path:
+        #axDist, ayDist, dxDist, dyDist = dynaLearner[actionId].getClass(fea, orange.GetBoth) #TODO: add randomness here
+        
+        if isFirst:
+           #only do sampling in the first run
+           isFirst = False 
+           newWorldList = []
+           for world in state.worldList:
+               fea = getTestFeature(world, actionId)
+
+               #WARNING!! Don't change the order
+               reward, = rewardLearner.getClass(fea)
+
+               actionId = int(fea[0])
+               fea.pop(0)
+               distList = dynaLearner[actionId].getClass(fea, orange.GetBoth) #TODO: add randomness here
+               sampleList = [[vpPair = GetSample(dist) for dist in distList] for i in range(sampleNum)]
+               for  i in range(sampleNum):
+                   samplePair = [vpPair = GetSample(dist) for dist in distList]
+                   ax, ay, dx, dy = [round(pair[0], 1) for pair in samplePair]
+
+                   m = world.mario
+                   sx = ax + m.sx
+                   sy = ay + m.sy
+                   newMario = copy.deepcopy(m)
+
+                   newMario.x = m.x + m.sx + dx
+                   newMario.y = m.y + m.sy + dy
+                   newMario.sx = sx
+                   newMario.sy = sy
+
+                   newState = copy.copy(state) #with static assumption, everything other than mario stays the same
+                   newState.path = copy.copy(state.path)
+                   newState.mario = newMario
+                   newState.reward = reward + state.reward
+                   newState.path.append(actionId)
+
+        dir, isJump, isSpeed = getActionType(actionId)
+        if (not (newState.mario.sy >= 0 and isJump)) and not (sx == 0.0 and sy == 0.0 and dx == 0.0 and dy == 0.0): #Jump does not increase y-speed, do not need to search anymore
+            if newState.mario.sx == 0.0 and newState.mario.sy == 0.0 and dx == 0.0 and dy == 0.0:
+                print "Mario Warning: ", newState.mario.sx, " ", newState.mario.sy, " ", newState.mario.x, " ", newState.mario.y
+            state = newState
+            isValid = True
+        else:
+            isValid = False
+            break #not a valid action
+    return state, isValid
 def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActionRange):
     print "--------------------"
     #initState.dump()
@@ -15,7 +95,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     MaxDist = 7# usually we can get 8.5 without any barrier
     nodeList = [] #use priority queue here
     outOfBoundList = []
-    
+
     curState = copy.copy(initState)
     curState.path = [] #keep track of action path
     curState.reward = 0
@@ -23,13 +103,13 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     for actionId in initActionRange:
         state, isValid =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
         if isValid:
-             AStarReward = state.reward + state.mario.x - initState.mario.x
+            AStarReward = state.reward + state.mario.x - initState.mario.x
              heappush(nodeList, (-AStarReward, state)) #heappop returns the smallest item
 
     defaultPath = [[9 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 11, 9], [9, 9, 11]] #right speed and right jump speed
 
     if PrevPlan != []:
-       PrevPlan.pop(0) 
+        PrevPlan.pop(0) 
     if PrevPlan != [] and (not PrevPlan in defaultPath):
         defaultPath.append(PrevPlan)
     #TODO: check if default path is valid or not (can jump and same state)
@@ -80,7 +160,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
         for actionId in ActionRange:
             newState, isValid =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
             if isValid:
-                 stateList.append(newState)
+                stateList.append(newState)
 
         #compute the expected A* reward
         for state in stateList:
@@ -106,7 +186,7 @@ def Optimize(initState, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     PrevPlan = copy.copy(curState.path)
     return curState.path
 
-    
+
 def ExpandPath(path, state, dynaLearner, rewardLearner):
 
     for actionId in path:
@@ -128,7 +208,7 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
         sx = round(ax + m.sx, 1)
         sy = round(ay + m.sy, 1)
         newMario = copy.deepcopy(m)
-        
+
         newMario.x = m.x + m.sx + dx
         newMario.y = m.y + m.sy + dy
         newMario.sx = sx
@@ -142,7 +222,7 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
 
         dir, isJump, isSpeed = getActionType(actionId)
         if (not (newState.mario.sy >= 0 and isJump)) and not (sx == 0.0 and sy == 0.0 and dx == 0.0 and dy == 0.0): #Jump does not increase y-speed, do not need to search anymore
-            if newState.mario.sx == 0.0 and newState.mario.sy == 0.0 and dx == 0.0 and dy == 0:
+            if newState.mario.sx == 0.0 and newState.mario.sy == 0.0 and dx == 0.0 and dy == 0.0:
                 print "Mario Warning: ", newState.mario.sx, " ", newState.mario.sy, " ", newState.mario.x, " ", newState.mario.y
             state = newState
             isValid = True
@@ -176,7 +256,7 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
         #newState.path.append(actionId)
         #newStateList.append(newState)
     #return newStateList
-        
+
 #def classify(data, treeList, domainList):
     #classNum = len(domainList)
     #partData = [orange.Example(domainList[i], data[:FeatureNum] + [data[FeatureNum+i]]) for i in range(classNum)]
@@ -184,7 +264,7 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
     #return res
 
 
-    
+
 #-------------------UNIT TEST--------------------------
 from Test import getDummyObservation
 from ML import getCommonVar, getClassVar, Learner
@@ -241,7 +321,7 @@ def TestSim(obs):
 
     DynamicLearner.add([modelFea])
     RewardLearner.add([rewardFea])
-   
+
     print Optimize(state, DynamicLearner, RewardLearner, 100)
 def TestSimPath(path, state, dynaLearner, rewardLearner):
     for actionId in path:
@@ -253,7 +333,7 @@ def TestSimPath(path, state, dynaLearner, rewardLearner):
         print "mario: ", m.x, " ", m.y, " ", reward
 
         newMario = copy.deepcopy(m)
-        
+
         newMario.x = m.x + m.sx + dx
         newMario.y = m.y + m.sy + dy
         newMario.sx = sx
@@ -277,11 +357,11 @@ def TestSimRealAgent():
 
     DynamicLearner = agent.DynamicLearner
     RewardLearner = agent.RewardLearner
-   
+
     path = Optimize(state, DynamicLearner, RewardLearner, 100)
     print path
     TestSimPath(path, state, DynamicLearner, RewardLearner)
-        
+
 if __name__ == '__main__':
 
 
@@ -292,6 +372,6 @@ if __name__ == '__main__':
     #TestSim(obsList[len(obsList)-1])
 
     #TestSimRealAgent()
-   
-        
-    
+
+
+

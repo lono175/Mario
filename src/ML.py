@@ -89,6 +89,7 @@ class Learner:
                 #corNum = corNum + 1
         #print "correct ", corNum
         return newDataList
+
     #prune the dataList and return a new one
     def prune(self, dataList):
 
@@ -477,7 +478,10 @@ if __name__ == '__main__':
     dataListOri = [['9', 0.0, -1.8, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 0.69999999999999996, -2.7999999999999998, 0.5, -9.3000000000000002],
             ['3', 0.69999999999999996, -2.7999999999999998, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', -0.20000000000000001, -3.1000000000000001, -0.20000000000000001, -100]]
     dataList = [['9', 0.0, -1.8, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  -2.3000000000000002],
-            ['3', 0.69999999999999996, -2.7999999999999998, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  2]]
+            ['3', 0.69999999999999996, -2.7999999999999998, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  2],
+            ['3', 0.69999999999999996, -2.7999999999999998, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  2.3],
+['3', 0.69999999999999996, -2.7999999999999998, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'M', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  2.5]
+            ]
     #treeList = getClassifier(dataList)
     #data = dataList[0]
     #res =  classify(data, treeList)
@@ -510,34 +514,44 @@ if __name__ == '__main__':
     tree = orange.TreeLearner(table)
     print type(tree)
     print tree(orange.Example(domain, dataList[0]))
+    v, p = tree(orange.Example(domain, dataList[0]), orange.GetBoth)
+    print v
+    print type(p)
+    print p
+    p2 = tree(orange.Example(domain, dataList[0]), orange.GetProbabilities)
+    print type(p2)
+    print p2.var()
+    print p2.average()
+    for d in p2:
+        print "val: ", d
 
-    print "---------------"
-    data = ['9', 0.0, -1.8, -9.3000000000000002] 
-    data2 = ['2', 0.69999999999999996, -2.7999999999999998, -100]
-    domain = []
-    var = orange.EnumVariable("action", values = ['9', '3', '2'])
-    domain.append(var)
-    var = orange.FloatVariable("x-speed")
-    domain.append(var)
-    var = orange.FloatVariable("y-speed")
-    domain.append(var)
-    for x in range(25):
-     var = orange.EnumVariable("obs%i"%x, values = tileList)
-     domain.append(var)
-    var = orange.FloatVariable("cls")
-    domain.append(var)
+    #print "---------------"
+    #data = ['9', 0.0, -1.8, -9.3000000000000002] 
+    #data2 = ['2', 0.69999999999999996, -2.7999999999999998, -100]
+    #domain = []
+    #var = orange.EnumVariable("action", values = ['9', '3', '2'])
+    #domain.append(var)
+    #var = orange.FloatVariable("x-speed")
+    #domain.append(var)
+    #var = orange.FloatVariable("y-speed")
+    #domain.append(var)
+    #for x in range(25):
+     #var = orange.EnumVariable("obs%i"%x, values = tileList)
+     #domain.append(var)
+    #var = orange.FloatVariable("cls")
+    #domain.append(var)
 
-    commonDomain = orange.Domain(domain)
-    domain = orange.Domain(commonDomain)
-    table = orange.ExampleTable(domain, dataList)
-    tree = orngTree.TreeLearner(table)
-    print tree
-    print tree(orange.Example(domain, dataList[0]))
-    print "---------------"
-    treeList = getClassifier(dataListOri)
-    print classify(dataListOri[0], treeList)
+    #commonDomain = orange.Domain(domain)
+    #domain = orange.Domain(commonDomain)
+    #table = orange.ExampleTable(domain, dataList)
+    #tree = orngTree.TreeLearner(table)
+    #print tree
+    #print tree(orange.Example(domain, dataList[0]))
+    #print "---------------"
+    #treeList = getClassifier(dataListOri)
+    #print classify(dataListOri[0], treeList)
 
-    print "---------------"
+    #print "---------------"
 
 
 
