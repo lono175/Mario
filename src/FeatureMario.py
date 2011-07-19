@@ -6,26 +6,29 @@ def getTestFeature(state, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    offsetX = round(mario.x - int(mario.x), 1)
-    offsetY = round(mario.y - int(mario.y), 1)
-    fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    #offsetX = round(mario.x - int(mario.x), 1)
+    #offsetY = round(mario.y - int(mario.y), 1)
+    #fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
     return fea
 
 def getTrainFeature(state, classValueList, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    offsetX = round(mario.x - int(mario.x), 1)
-    offsetY = round(mario.y - int(mario.y), 1)
-    fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    #offsetX = round(mario.x - int(mario.x), 1)
+    #offsetY = round(mario.y - int(mario.y), 1)
+    #fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 def getModelFeature(state, classValueList):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    offsetX = round(mario.x - int(mario.x), 1)
-    offsetY = round(mario.y - int(mario.y), 1)
-    fea = [offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    #offsetX = round(mario.x - int(mario.x), 1)
+    #offsetY = round(mario.y - int(mario.y), 1)
+    #fea = [offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    fea = [round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 
 def getTileAroundMario(state, halfLen):

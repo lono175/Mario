@@ -28,10 +28,13 @@ class Learner:
         if dataList != []:
             self.treeList = self.getClassifier(dataList, self.domainList)
 
-    def getClass(self, data):
+    def getClass(self, data, param = None):
         assert(self.treeList != [])
         partData = orange.Example(self.commonDomain, data[:self.FeatureNum])
-        res = [self.treeList[i](partData).value for i in range(self.classNum)]
+        if param == None:
+            res = [self.treeList[i](partData).value for i in range(self.classNum)]
+        else:
+            res = [self.treeList[i](partData, param) for i in range(self.classNum)]
         return res
 
     def getClassTree(self, data, treeList):
@@ -447,10 +450,10 @@ def getCommonVar():
 
     domain = []
     var = orange.EnumVariable("action", values = ['%i'%x for x in ActionRange])
-    domain.append(var)
-    var = orange.FloatVariable("x-offset")
-    domain.append(var)
-    var = orange.FloatVariable("y-offset")
+    #domain.append(var)
+    #var = orange.FloatVariable("x-offset")
+    #domain.append(var)
+    #var = orange.FloatVariable("y-offset")
     domain.append(var)
     var = orange.FloatVariable("x-speed")
     domain.append(var)

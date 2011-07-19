@@ -22,13 +22,13 @@ class ModelAgent(Agent):
         pseudoReward = 5
         self.initPseudoReward = pseudoReward
         gamma = 0.8
-        episilon = 0.00 #disable exploration for HORDQ
+        self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
         alpha = 0.05
         #initialQ = MaxStepReward/(1-gamma)
         initialQ = 0
         dumpCount = 100000
         #self.agent = LinearHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
-        self.agent = LambdaHORDQ(alpha, episilon, gamma, self.actionList, initialQ, dumpCount, pseudoReward)
+        self.agent = LambdaHORDQ(alpha, self.HORDQ_episilon, gamma, self.actionList, initialQ, dumpCount, pseudoReward)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
@@ -59,7 +59,7 @@ class ModelAgent(Agent):
 
         
     def planning(self, state, initActionRange):
-        MaxNode = 700
+        MaxNode = 300
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan, initActionRange)
         self.lastPlan = path
         return path[0]
@@ -101,8 +101,10 @@ class ModelAgent(Agent):
         self.lastState = state
         fea = getSarsaFeature(state, NoTask)
         if self.RewardLearner.empty():
+            self.agent.episilon = 0.8 #encourage exploration
             action = self.agent.start(fea, NoTask)
         else:
+            self.agent.episilon = self.HORDQ_episilon
             possibleAction = self.agent.getPossibleAction(fea)
             action = self.planning(state, possibleAction)
             action = self.agent.start(fea, action)
@@ -147,7 +149,7 @@ class ModelAgent(Agent):
             action = self.agent.step(reward, fea, action)
             self.agent.pseudoReward = self.initPseudoReward
         #state.dump()
-        #print "loc:", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
+            print "step loc:",  self.stepNum, " ", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         #state.path = []
         #state.reward = 0
 
@@ -182,10 +184,10 @@ class ModelAgent(Agent):
             predictModelClass = [round(v, 1) for v in predictModelClass]
             print "feature: ", lastActionId, " ", modelFea
             print "predict: ", predictModelClass
-            if not classVar == predictModelClass:
-                self.feaList[lastActionId].append(modelFea)
-            else:
-                print "pass model-------------"
+            #if not classVar == predictModelClass:
+            self.feaList[lastActionId].append(modelFea)
+            #else:
+                #print "pass model-------------"
         else:
             self.feaList[lastActionId].append(modelFea)
 
@@ -195,10 +197,10 @@ class ModelAgent(Agent):
             predictRewardClass = [round(v, 1) for v in predictRewardClass]
             print "reward: ", modelReward
             print "pre reward: ", predictRewardClass
-            if not rewardClassVar == predictRewardClass:
-                self.rewardFeaList.append(rewardFea)
-            else:
-                print "pass reward-------------"
+            #if not rewardClassVar == predictRewardClass:
+            self.rewardFeaList.append(rewardFea)
+            #else:
+                #print "pass reward-------------"
         else:
             self.rewardFeaList.append(rewardFea)
 
