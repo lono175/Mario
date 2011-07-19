@@ -186,9 +186,10 @@ class ModelAgent(Agent):
             #print "predict: ", predictModelClass
             predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
             predictModelClass = [round(v, 2) for v in predictModelClass]
-            self.feaList[lastActionId].append(modelFea)
+            print "feature: ", lastActionId, " ", modelFea
+            print "predict: ", predictModelClass
             if not classVar == predictModelClass:
-                pass
+                self.feaList[lastActionId].append(modelFea)
             else:
                 print "pass model-------------"
         else:
