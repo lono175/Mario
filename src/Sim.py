@@ -109,7 +109,7 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     print "--------------------"
     #initState.dump()
 
-    MaxState = 2
+    MaxState = 3
     MaxDepth = 4
     MinDepth = 3
     MaxDist = 6# usually we can get 8.5 without any barrier
@@ -119,16 +119,17 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     #create the initial state
     curState = MakeSimState(initWorld, MaxState)
 
-    #only search for the action which is consistent with model-free agent
-    for actionId in initActionRange:
-        state =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
-        if not state.empty():
-            negAStarReward = getNegAStarReward(state, initWorld)
-            heappush(nodeList, (negAStarReward, state)) #heappop returns the smallest item
+    #for actionId in initActionRange:
+        #state =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
+        #if not state.empty():
+            #negAStarReward = getNegAStarReward(state, initWorld)
+            #heappush(nodeList, (negAStarReward, state)) #heappop returns the smallest item
 
 
     #the predefined paths to search
-    defaultPath = [[9 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 11, 9], [9, 9, 11]] + [[actionId] for actionId in initActionRange] #right speed and right jump speed
+    #right speed(9) and right jump speed(11)
+    #only search for the action which is consistent with model-free agent
+    defaultPath = [[9 for x in range(3)], [9, 11, 11], [11, 9, 11], [11, 11, 9], [9, 11, 9], [9, 9, 11]] + [[actionId] for actionId in initActionRange] 
 
     if PrevPlan != []:
         PrevPlan.pop(0) #the first action has been executed
@@ -140,7 +141,7 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     for path in defaultPath:
         if not path[0] in initActionRange:
             continue
-        state =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
+        state =  ExpandPath(path, curState, dynaLearner, rewardLearner)
         if not state.empty():
             #compute the expected A* reward
             negAStarReward = getNegAStarReward(state, initWorld)
@@ -157,13 +158,16 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
         heappush(nodeList, (negAStarReward, curState))
 
         #remove a node and expand it
+        isOutOfBound = False
         while len(nodeList) > 0:
             negAStarReward, curState = heappop(nodeList)
             if len(curState.path) > MaxDepth or curState.reward <= InPitPenalty*0.5: #half of the probability dead is bad enough
                 outOfBoundList.append((negAStarReward, curState))
+                isOutOfBound = True
             else:
+                isOutOfBound = False
                 break
-        if len(nodeList) == 0:
+        if isOutOfBound and len(nodeList) == 0:
             #all nodes are out of bound or not valid
             break
 
@@ -194,7 +198,7 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
 
     if len(nodeList) <= 0:
         #impossible
-        print outOfBoundList
+        print "out of bound: ", outOfBoundList
         print initActionRange
         print initWorld.mario.x, " ", initWorld.mario.y
         initWorld.dump()
