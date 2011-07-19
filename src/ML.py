@@ -53,6 +53,7 @@ class Learner:
 
         for data in dataList:
             classVar = data[self.FeatureNum:]
+            classVar = [round(v, 1) for v in classVar]
             predict = self.getClassTree(data, treeList) 
             predict = [round(v, 1) for v in predict]
             avgError = avgError + abs(array(predict) - array(classVar))
@@ -450,10 +451,10 @@ def getCommonVar():
 
     domain = []
     var = orange.EnumVariable("action", values = ['%i'%x for x in ActionRange])
-    #domain.append(var)
-    #var = orange.FloatVariable("x-offset")
-    #domain.append(var)
-    #var = orange.FloatVariable("y-offset")
+    domain.append(var)
+    var = orange.FloatVariable("x-offset")
+    domain.append(var)
+    var = orange.FloatVariable("y-offset")
     domain.append(var)
     var = orange.FloatVariable("x-speed")
     domain.append(var)

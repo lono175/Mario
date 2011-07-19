@@ -2,6 +2,7 @@ from rlglue.types import Action
 
 InPitPenalty = -50.0
 DeathPenalty = -50.0
+Precision = 2
 class MonType:
     Mario = ord('M') #good 0
     RedKoopa = ord('R') #1

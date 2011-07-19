@@ -1,34 +1,34 @@
 #from numpy  import *
-from Def    import MonType, MaxX, MaxY
+from Def    import MonType, MaxX, MaxY, Precision
 from WorldState import *
 BlockLen = 2
 def getTestFeature(state, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    #offsetX = round(mario.x - int(mario.x), 1)
-    #offsetY = round(mario.y - int(mario.y), 1)
-    #fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    offsetX = round(mario.x - int(mario.x), Precision)
+    offsetY = round(mario.y - int(mario.y), Precision)
+    fea = [str(actionId), offsetX, offsetY, round(mario.sx, Precision), round(mario.sy, Precision)] + [chr(tileList[x]) for x in range(len(tileList))] 
+    #fea = [str(actionId), round(mario.sx, Precision), round(mario.sy, Precision)] + [chr(tileList[x]) for x in range(len(tileList))] 
     return fea
 
 def getTrainFeature(state, classValueList, actionId):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    #offsetX = round(mario.x - int(mario.x), 1)
-    #offsetY = round(mario.y - int(mario.y), 1)
-    #fea = [str(actionId), offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
-    fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    offsetX = round(mario.x - int(mario.x), Precision)
+    offsetY = round(mario.y - int(mario.y), Precision)
+    fea = [str(actionId), offsetX, offsetY, round(mario.sx, Precision), round(mario.sy, Precision)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    #fea = [str(actionId), round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 def getModelFeature(state, classValueList):
     mario = state.mario
     tileList = getTileAroundMario(state, BlockLen)
     assert(len(tileList) == 25)
-    #offsetX = round(mario.x - int(mario.x), 1)
-    #offsetY = round(mario.y - int(mario.y), 1)
-    #fea = [offsetX, offsetY, round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
-    fea = [round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    offsetX = round(mario.x - int(mario.x), Precision)
+    offsetY = round(mario.y - int(mario.y), Precision)
+    fea = [offsetX, offsetY, round(mario.sx, Precision), round(mario.sy, Precision)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
+    #fea = [round(mario.sx, 1), round(mario.sy, 1)] + [chr(tileList[x]) for x in range(len(tileList))]  + classValueList
     return fea
 
 def getTileAroundMario(state, halfLen):
@@ -216,7 +216,8 @@ def getMonsterFeatureList(state, prevAction):
             continue
         if abs(dy) > 5 :
             continue
-        fea = (dx, dy, prevAction, m.type)
+        #fea = (dx, dy, prevAction, m.type)
+        fea = (dx, dy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)

@@ -1,7 +1,7 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, dumpAction, InPitPenalty, DeathPenalty
+from Def import getAllAction, makeAction, dumpAction, InPitPenalty, DeathPenalty, Precision
 from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
 #from LinearHORDQ import LinearHORDQ
@@ -173,21 +173,24 @@ class ModelAgent(Agent):
         aX = mario.sx - lastMario.sx 
         aY = mario.sy - lastMario.sy 
         
-        classVar = [round(aX, 1), round(aY, 1), round(deltaX, 1), round(deltaY, 1)]
+        classVar = [round(aX, Precision), round(aY, Precision), round(deltaX, Precision), round(deltaY, Precision)]
         rewardClassVar = [round(modelReward, 0)]
         modelFea = getModelFeature(self.lastState, classVar)
         rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
 
         if not self.RewardLearner.empty(): #TODO: too dirty
 
+            #predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
+            #predictModelClass = [round(v, 1) for v in predictModelClass]
+            #print "feature: ", lastActionId, " ", modelFea
+            #print "predict: ", predictModelClass
             predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
-            predictModelClass = [round(v, 1) for v in predictModelClass]
-            print "feature: ", lastActionId, " ", modelFea
-            print "predict: ", predictModelClass
-            #if not classVar == predictModelClass:
+            predictModelClass = [round(v, 2) for v in predictModelClass]
             self.feaList[lastActionId].append(modelFea)
-            #else:
-                #print "pass model-------------"
+            if not classVar == predictModelClass:
+                pass
+            else:
+                print "pass model-------------"
         else:
             self.feaList[lastActionId].append(modelFea)
 
@@ -197,10 +200,10 @@ class ModelAgent(Agent):
             predictRewardClass = [round(v, 1) for v in predictRewardClass]
             print "reward: ", modelReward
             print "pre reward: ", predictRewardClass
-            #if not rewardClassVar == predictRewardClass:
-            self.rewardFeaList.append(rewardFea)
-            #else:
-                #print "pass reward-------------"
+            if not rewardClassVar == predictRewardClass:
+                self.rewardFeaList.append(rewardFea)
+            else:
+                print "pass reward-------------"
         else:
             self.rewardFeaList.append(rewardFea)
 
@@ -219,7 +222,7 @@ class ModelAgent(Agent):
             modelReward = InPitPenalty
 
         lastActionId = self.lastAction
-        rewardFea = getTrainFeature(self.lastState, [round(modelReward, 1)], lastActionId) #don't learn the pseudo reward
+        rewardFea = getTrainFeature(self.lastState, [round(modelReward, 0)], lastActionId) #don't learn the pseudo reward
 
         self.rewardFeaList.append(rewardFea)
 

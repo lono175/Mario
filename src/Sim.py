@@ -76,13 +76,13 @@ def ExpandPath(path, state, dynaLearner, rewardLearner):
            reward, = rewardLearner.getClass(fea)
            fea.pop(0)
            distList = dynaLearner[actionId].getClass(fea, orange.GetProbabilities) #TODO: add randomness here
-           sampleValue = [GetSample(dist) for dist in distList]
-           ax, ay, dx, dy = [round(value, 1) for value in sampleValue]
+           ax, ay, dx, dy = [GetSample(dist) for dist in distList]
+           #ax, ay, dx, dy = [round(value, Precision) for value in sampleValue]
            #ll = [log(pair[1]) for pair in sampleValue] #loglikelihood
 
            m = world.mario
-           sx = round(ax + m.sx)
-           sy = round(ay + m.sy)
+           sx = ax + m.sx
+           sy = ay + m.sy
 
            newMario = copy.deepcopy(m)
            newMario.x = m.x + m.sx + dx
