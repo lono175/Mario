@@ -3,6 +3,7 @@
 
 import orange, random
 import orngWrap, orngTree
+import orngEnsemble
 from Orange.classification.svm import SVMLearner, SVMLearnerEasy
 
 from FeatureMario import MonType
@@ -202,6 +203,25 @@ class Learner:
             treeList.append(classifier)
         return treeList
         
+    # 3 + 25 + 4 classes= 32 
+    #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
+    def getForestClassifier(self, data, domainList):
+        dataList = []
+        i = 0
+        for domain in domainList:
+            partData = [(data[x][:self.FeatureNum] + [data[x][self.FeatureNum+i]]) for x in range(len(data))]
+            table = orange.ExampleTable(domain, partData)
+            dataList.append(table)
+            i = i + 1
+
+            #tree = orange.TreeLearner(table)
+            #treeList.append(tree)
+
+        treeList = []
+        for data in dataList:
+            classifier = orngEnsemble.RandomForestLearner(data, trees=100)
+            treeList.append(classifier)
+        return treeList
     # 3 + 25 + 4 classes= 32 
     #[1, 1, 1] + [' ' for x in range(25)] + [1, 1, 1, 1]
     def getClassifier(self, data, domainList):

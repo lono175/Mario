@@ -110,7 +110,7 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     #initState.dump()
 
     MaxState = 3
-    MaxDepth = 4
+    MaxDepth = 3
     MinDepth = 3
     MaxDist = 6# usually we can get 8.5 without any barrier
     nodeList = [] #use priority queue here

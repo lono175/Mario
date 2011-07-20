@@ -11,6 +11,7 @@ from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit, getModelFeature
 from Sim import Optimize, ExpandPath
 from numpy import array 
+import orngTree
 NoTask = -1
 MaxStepReward = 2.0 
 
@@ -55,11 +56,15 @@ class ModelAgent(Agent):
 
         for action in self.actionList:
             self.feaList[action], self.DynamicLearner[action].treeList = self.DynamicLearner[action].prune(self.feaList[action])
+            print "action learner ", action, "  nodes: ", orngTree.countNodes(self.DynamicLearner[action].treeList[0])
+            print "action learner leaves: ", self.DynamicLearner[action].treeList[0].count_leaves()
         self.rewardFeaList, self.RewardLearner.treeList = self.RewardLearner.prune(self.rewardFeaList)
+        print "reward learner nodes: ", orngTree.countNodes(self.RewardLearner.treeList[0])
+        print "reward learner leaves: ", self.RewardLearner.treeList[0].count_leaves()
 
         
     def planning(self, state, initActionRange):
-        MaxNode = 300
+        MaxNode = 200
         path = Optimize(state, self.DynamicLearner, self.RewardLearner, MaxNode, self.lastPlan, initActionRange)
         self.lastPlan = path
         return path[0]
