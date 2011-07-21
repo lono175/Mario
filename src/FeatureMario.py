@@ -221,6 +221,19 @@ def getMonsterFeatureList(state, prevAction):
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)
+    for p in state.pitList:
+        dx = round(p.x - mario.x + state.origin, 0)
+        dy = round(p.y - mario.y, 0)
+        if dx > 7 or dx <= -5:
+            continue
+        if abs(dy) > 7 :
+            continue
+        #fea = (dx, dy, prevAction, m.type)
+        fea = (0, dx, dy, prevAction)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
+        feaList.append(fea)
+
     return feaList
     
 def getSarsaFeature(state, prevAction):

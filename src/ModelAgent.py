@@ -11,25 +11,28 @@ from WorldState import WorldState
 from FeatureMario import getSarsaFeature, getTrainFeature, getTestFeature, isMarioInPit, getModelFeature
 from Sim import Optimize, ExpandPath
 from numpy import array 
+import tool
 import orngTree
 NoTask = -1
 MaxStepReward = 2.0 
 
+#TODO: only add features before the agent's death???
+#TODO: test the power of HORDQ with complex pits
+#TODO: use Q value of HORDQ as the reward
+HybridAgent = 0
+SarsaAgent = 1
+ModelAgent = 2
 class ModelAgent(Agent):
     def __init__(self):
-        print "init"
-        random.seed()
         self.actionList = getAllAction()
-        pseudoReward = 5
-        self.initPseudoReward = pseudoReward
         gamma = 0.8
-        self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
+
         alpha = 0.05
         #initialQ = MaxStepReward/(1-gamma)
         initialQ = 0
         dumpCount = 100000
         #self.agent = LinearHORDQ(0.05, 0.1, 0.8, self.actionList, initialQ, dumpCount, pseudoReward)
-        self.agent = LambdaHORDQ(alpha, self.HORDQ_episilon, gamma, self.actionList, initialQ, dumpCount, pseudoReward)
+        self.agent = LambdaHORDQ(alpha, 0.05, gamma, self.actionList, initialQ, dumpCount, 0)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
         self.rewardList = []
@@ -50,6 +53,16 @@ class ModelAgent(Agent):
         self.obsList = [] #TODO: remove me
         
     
+    def AgentType(self):
+        return self.agentType
+    #return True when we can start using our model
+    def isModelReady(self):
+        if self.AgentType() == SarsaAgent:
+            return False
+        if self.RewardLearner.empty():
+            return False
+        return True
+
     #prune both dynamic and reward data
     def prune(self):
 
@@ -85,16 +98,38 @@ class ModelAgent(Agent):
 
     def agent_init(self, taskSpecString):
 
+        random.seed()
+        #self.agentType = SarsaAgent
+        self.agentType = ModelAgent
+        print "init"
+        print "type", self.agentType
+
+        #too hacky
+
+        if self.agentType == SarsaAgent:
+            self.HORDQ_episilon = 0.05 #disable exploration for HORDQ
+        else:
+            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
+        
+        pseudoReward = 3
+        print "pseudo reward: ", pseudoReward
+        self.initPseudoReward = pseudoReward
+        self.agent.episilon = self.HORDQ_episilon
+        self.agent.pseudoReward = pseudoReward
+
         #parse action
         print "begin: ", self.totalStep
         feaNum = len(self.rewardFeaList)
         print "feaNum", feaNum
 
+        print "SARSA Num:", len(self.agent.Q)
+
         self.initLearner()
         if feaNum == 0:
             return
         
-        self.prune()
+        if not self.AgentType() == SarsaAgent:
+            self.prune()
 
         #retrain the classifier for each different run
         #for action in self.actionList:
@@ -105,8 +140,10 @@ class ModelAgent(Agent):
         state = WorldState(obs)
         self.lastState = state
         fea = getSarsaFeature(state, NoTask)
-        if self.RewardLearner.empty():
-            self.agent.episilon = 0.8 #encourage exploration
+        if not self.isModelReady():
+            if not self.AgentType() == SarsaAgent:
+                self.agent.episilon = 0.05 #encourage exploration
+
             action = self.agent.start(fea, NoTask)
         else:
             self.agent.episilon = self.HORDQ_episilon
@@ -135,7 +172,7 @@ class ModelAgent(Agent):
             print "in pit !!!!!!!"
             #reward = reward + InPitPenalty #no pit penalty for HORDQ
             modelReward = InPitPenalty
-        if self.RewardLearner.empty():
+        if not self.isModelReady():
             #fea = getSarsaFeature(obs)
             action = self.agent.step(reward, fea, NoTask)
         else:
@@ -143,6 +180,7 @@ class ModelAgent(Agent):
             if random.random() < self.epsilon:
                 #select randomly
                 action = self.actionList[int(random.random()*len(self.actionList))]
+                print "random!!"
             else:
                 possibleAction = self.agent.getPossibleAction(fea)
                 if fea[0] == (): #if not monster around, pass control to the planner
@@ -154,7 +192,7 @@ class ModelAgent(Agent):
             action = self.agent.step(reward, fea, action)
             self.agent.pseudoReward = self.initPseudoReward
         #state.dump()
-            print "step loc:",  self.stepNum, " ", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
+        print "step loc:",  self.stepNum, " ", mario.x , " ", mario.y, " ", mario.sx, " ", mario.sy
         #state.path = []
         #state.reward = 0
 
@@ -183,27 +221,29 @@ class ModelAgent(Agent):
         modelFea = getModelFeature(self.lastState, classVar)
         rewardFea = getTrainFeature(self.lastState, rewardClassVar, lastActionId) #don't learn the pseudo reward
 
-        if not self.RewardLearner.empty(): #TODO: too dirty
+        if self.isModelReady(): #TODO: too dirty
 
             #predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
             #predictModelClass = [round(v, 1) for v in predictModelClass]
             #print "feature: ", lastActionId, " ", modelFea
             #print "predict: ", predictModelClass
             predictModelClass = self.DynamicLearner[lastActionId].getClass(modelFea)
-            predictModelClass = [round(v, 2) for v in predictModelClass]
+            predictModelClass = [round(v, 1) for v in predictModelClass]
+            roundClassVar = [round(v, 1) for v in classVar]
             print "feature: ", lastActionId, " ", modelFea
             print "predict: ", predictModelClass
-            if not classVar == predictModelClass:
+            if not roundClassVar == predictModelClass:
                 self.feaList[lastActionId].append(modelFea)
             else:
                 print "pass model-------------"
         else:
-            self.feaList[lastActionId].append(modelFea)
+            if not self.AgentType() == SarsaAgent:
+                self.feaList[lastActionId].append(modelFea)
 
 
-        if not self.RewardLearner.empty():
+        if self.isModelReady():
             predictRewardClass = self.RewardLearner.getClass(rewardFea)
-            predictRewardClass = [round(v, 1) for v in predictRewardClass]
+            predictRewardClass = [round(v, 0) for v in predictRewardClass]
             print "reward: ", modelReward
             print "pre reward: ", predictRewardClass
             if not rewardClassVar == predictRewardClass:
@@ -211,7 +251,8 @@ class ModelAgent(Agent):
             else:
                 print "pass reward-------------"
         else:
-            self.rewardFeaList.append(rewardFea)
+            if not self.AgentType() == SarsaAgent:
+                self.rewardFeaList.append(rewardFea)
 
         self.lastState = state
         self.lastAction = action
@@ -230,9 +271,10 @@ class ModelAgent(Agent):
         lastActionId = self.lastAction
         rewardFea = getTrainFeature(self.lastState, [round(modelReward, 0)], lastActionId) #don't learn the pseudo reward
 
-        self.rewardFeaList.append(rewardFea)
+        if not self.AgentType() == SarsaAgent:
+            self.rewardFeaList.append(rewardFea)
 
-        if not self.RewardLearner.empty():
+        if self.isModelReady():
             preReward, = self.RewardLearner.getClass(rewardFea)
             print "pre reward: ", reward
 
