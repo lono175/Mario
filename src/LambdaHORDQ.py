@@ -51,7 +51,7 @@ class LambdaHORDQ:
         if random.random() < self.epsilon:
             #select randomly
             action = self.actionList[int(random.random()*len(self.actionList))]
-            print "random: ", rnd, " ", self.epsilon
+            print "random: ", self.epsilon
             return action
         else:
             #select the best action

@@ -118,7 +118,7 @@ class ModelAgent(Agent):
             self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
         
         self.epsilon = 0.01 #TODO: disable the exploration here
-        pseudoReward = 10
+        pseudoReward = 5
         print "pseudo reward: ", pseudoReward
         self.initPseudoReward = pseudoReward
         self.agent.pseudoReward = pseudoReward
