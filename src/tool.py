@@ -46,3 +46,18 @@ def Load(filename):
     import cPickle
     input = open(filename, 'rb')
     return cPickle.load(input)
+
+def SaveToCSVSingle(list, filename):
+    FILE = open(filename,"w")
+    for line in list:
+        FILE.write(str(line))
+        FILE.write('\n')
+    FILE.close()
+def SaveToCSV(list, filename):
+    FILE = open(filename,"w")
+    for line in list:
+        for item in line:
+            FILE.write(str(item))
+            FILE.write(', ')
+        FILE.write('\n')
+    FILE.close()

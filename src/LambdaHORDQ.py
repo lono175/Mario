@@ -21,7 +21,7 @@ class LambdaHORDQ:
         self.dumpCount = dumpCount
         self.episodeNum = 0
         self.isUpdate = True
-        self.lam = 0.8
+        self.lam = 0.9
         self.pseudoReward = pseudoReward
         self.smallLambda = 0.5
 
@@ -51,7 +51,7 @@ class LambdaHORDQ:
         if random.random() < self.epsilon:
             #select randomly
             action = self.actionList[int(random.random()*len(self.actionList))]
-            print "random"
+            print "random: ", rnd, " ", self.epsilon
             return action
         else:
             #select the best action
@@ -111,7 +111,8 @@ class LambdaHORDQ:
         self.touch(lastObservation, lastAction)
         numOfFeature = len(lastObservation)
         assert (numOfFeature >= 1)
-        deltaPerFeature = delta/numOfFeature
+        #deltaPerFeature = delta/numOfFeature
+        deltaPerFeature = delta
 
         #print "delta: ", deltaPerFeature
         #update all state-action pairs in trace

@@ -198,12 +198,12 @@ def getConstantFeature(obs):
     return feaList
 
 
-def getMonsterFeatureList(state, prevAction):
+def getRewardFeature(state, prevAction):
     feaList = []
     monList = getBadMonster(state) 
     mario = state.mario
-    vx = getQuanVec(mario.sx)
-    vy = getQuanVec(mario.sy)
+    #vx = getQuanVec(mario.sx)
+    #vy = getQuanVec(mario.sy)
     #for m in monList:
         #a general one to let mario "fear" the monster
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), MonType.GeneralObj, m.winged)
@@ -212,11 +212,54 @@ def getMonsterFeatureList(state, prevAction):
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
         dx = round(m.x - mario.x, 0)
         dy = round(m.y - mario.y, 0)
+        if dx > 3 or dx <= -3:
+            continue
+        if abs(dy) > 4 :
+            continue
+        #fea = (dx, dy, prevAction, m.type)
+        fea = (dx, dy, m.type)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
+        feaList.append(fea)
+    for p in state.pitList:
+        dx = round(p.x - mario.x + state.origin, 0)
+        dy = round(p.y - mario.y, 0)
+        if dx > 3 or dx <= -4:
+            continue
+        if abs(dy) > 7 :
+            continue
+        #fea = (dx, dy, prevAction, m.type)
+        fea = (0, dx, dy, prevAction)
+        #fea = (dx, dy)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
+        feaList.append(fea)
+    if feaList == []:
+        feaList = [()]
+    return feaList
+
+def getMonsterFeatureList(state, prevAction):
+    feaList = []
+    monList = getBadMonster(state) 
+    mario = state.mario
+    #vx = getQuanVec(mario.sx)
+    #vy = getQuanVec(mario.sy)
+    #for m in monList:
+        #a general one to let mario "fear" the monster
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), MonType.GeneralObj, m.winged)
+        #feaList.append(fea)
+    for m in monList:
+        #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sx - mario.sx + 0.5), int(m.sy - mario.sy + 0.5), m.type, m.winged)
+        dx = round(m.x - mario.x, 0)
+        dy = round(m.y - mario.y, 0)
+        #vx = getQuanVec(m.sx)
+        #vy = getQuanVec(m.sy)
         if dx > 7 or dx <= -3:
             continue
         if abs(dy) > 5 :
             continue
         #fea = (dx, dy, prevAction, m.type)
+        #fea = (dx, dy, vx, vy, m.type)
         fea = (dx, dy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)

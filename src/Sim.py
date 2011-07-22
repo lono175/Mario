@@ -1,7 +1,7 @@
 from WorldState import WorldState
 from heapq import heappush, heappop
 from Def import *
-from FeatureMario import BlockLen
+from FeatureMario import BlockLen, getRewardFeature
 from math import log
 import copy
 import random
@@ -68,39 +68,46 @@ def GetSample(contDist):
 #listof int, SimState, Learner, Learner, int -> lisof SimState       
 def ExpandPath(path, state, dynaLearner, rewardLearner):
     for actionId in path:
-       nextState = SimState()
-       for i, world in enumerate(state.worldList):
-           fea = getTestFeature(world, actionId)
+        nextState = SimState()
+        if state.path != []:
+             prevAction = state.path[len(state.path)-1]
+        else:
+            prevAction = -1 #TODO: make it NoTask
+        for i, world in enumerate(state.worldList):
+             fea = getTestFeature(world, actionId)
 
-           #WARNING!! Don't change the order
-           reward, = rewardLearner.getClass(fea)
-           fea.pop(0)
-           distList = dynaLearner[actionId].getClass(fea, orange.GetProbabilities) #TODO: add randomness here
-           ax, ay, dx, dy = [GetSample(dist) for dist in distList]
-           #ax, ay, dx, dy = [round(value, Precision) for value in sampleValue]
-           #ll = [log(pair[1]) for pair in sampleValue] #loglikelihood
+             rewardFea = getRewardFeature(world, prevAction)
+             #WARNING!! Don't change the order
+             #reward, = rewardLearner.getClass(fea)
+             reward = rewardLearner.getQ(rewardFea, actionId)
 
-           m = world.mario
-           sx = ax + m.sx
-           sy = ay + m.sy
+             fea.pop(0)
+             distList = dynaLearner[actionId].getClass(fea, orange.GetProbabilities) #TODO: add randomness here
+             ax, ay, dx, dy = [GetSample(dist) for dist in distList]
+             #ax, ay, dx, dy = [round(value, Precision) for value in sampleValue]
+             #ll = [log(pair[1]) for pair in sampleValue] #loglikelihood
 
-           newMario = copy.deepcopy(m)
-           newMario.x = m.x + m.sx + dx
-           newMario.y = m.y + m.sy + dy
-           newMario.sx = sx
-           newMario.sy = sy
+             m = world.mario
+             sx = ax + m.sx
+             sy = ay + m.sy
 
-           newWorld = copy.copy(world) #with static assumption, everything other than mario stays the same
-           newWorld.mario = newMario
+             newMario = copy.deepcopy(m)
+             newMario.x = m.x + m.sx + dx
+             newMario.y = m.y + m.sy + dy
+             newMario.sx = sx
+             newMario.sy = sy
 
-           dir, isJump, isSpeed = getActionType(actionId)
-           if (not (newWorld.mario.sy >= 0 and isJump)) and not (sx == 0.0 and sy == 0.0 and dx == 0.0 and dy == 0.0): #Jump does not increase y-speed, do not need to search anymore
-               nextState.worldList.append(newWorld)
-               nextState.rewardList.append( state.rewardList[i] + reward)
-               #nextState.probList.append(state.probList[i] + sum(ll))
+             newWorld = copy.copy(world) #with static assumption, everything other than mario stays the same
+             newWorld.mario = newMario
 
-       nextState.path = state.path + [actionId]
-       state = nextState
+             dir, isJump, isSpeed = getActionType(actionId)
+             if (not (newWorld.mario.sy >= 0 and isJump)) and not (sx == 0.0 and sy == 0.0 and dx == 0.0 and dy == 0.0): #Jump does not increase y-speed, do not need to search anymore
+                 nextState.worldList.append(newWorld)
+                 nextState.rewardList.append( state.rewardList[i] + reward)
+                 #nextState.probList.append(state.probList[i] + sum(ll))
+
+        nextState.path = state.path + [actionId]
+        state = nextState
     return state
 def getNegAStarReward(state, initWorld):
     return -(state.reward() + state.avgX() - initWorld.mario.x)
@@ -109,15 +116,18 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     print "--------------------"
     #initState.dump()
 
-    MaxState = 3
-    MaxDepth = 3
-    MinDepth = 3
+    MaxState = 2
+    MaxDepth = 5
+    MinDepth = 4 #the first one is the previous action
     MaxDist = 6# usually we can get 8.5 without any barrier
     nodeList = [] #use priority queue here
     outOfBoundList = []
 
     #create the initial state
     curState = MakeSimState(initWorld, MaxState)
+    if PrevPlan == []:
+        PrevPlan = [-1] #TODO: no task
+    curState.path = [PrevPlan[0]]
 
     #for actionId in initActionRange:
         #state =  ExpandPath([actionId], curState, dynaLearner, rewardLearner)
@@ -212,12 +222,14 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     print "path", curState.path
     print "a star", -negAStarReward
 
+    curState.path.pop(0) #remove the previous action
+    assert(curState.path != [])
+
     #if curState.path == []:
         #assert(len(outOfBoundList) == 1)
         #print len(nodeList)
         #assert(len(nodeList) == 0) #a special case when mario is out of bound at the init state
         #curState.path = [int(random.random()*MaxActionId)]
-
     return curState.path
 
 
