@@ -168,7 +168,6 @@ class ModelAgent(Agent):
         #if reward < -0.01 + epsilon and reward > -0.01 - epsilon:
             #reward = -1
 
-        print "agent step: eps", self.agent.epsilon
         state = WorldState(obs)
 
         fea = getSarsaFeature(state, self.lastAction)
