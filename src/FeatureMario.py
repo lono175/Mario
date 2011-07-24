@@ -229,7 +229,10 @@ def getRewardFeature(state, prevAction):
         if abs(dy) > 7 :
             continue
         #fea = (dx, dy, prevAction, m.type)
-        fea = (0, dx, dy, prevAction)
+        if dx <= 0 and dy < 0:
+            fea = (0, dx, dy, 0) #prevAction is not useful here
+        else:
+            fea = (0, dx, dy, prevAction)
         #fea = (dx, dy)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
@@ -272,7 +275,10 @@ def getMonsterFeatureList(state, prevAction):
         if abs(dy) > 7 :
             continue
         #fea = (dx, dy, prevAction, m.type)
-        fea = (0, dx, dy, prevAction)
+        if dx <= 0 and dy < 0:
+            fea = (0, dx, dy, 0) #prevAction is not useful here
+        else:
+            fea = (0, dx, dy, prevAction)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5), int(m.sy + 0.5), vy, m.type)
         #fea = (int(m.x - mario.x + 0.5), int(m.y - mario.y + 0.5),  m.type, m.winged)
         feaList.append(fea)

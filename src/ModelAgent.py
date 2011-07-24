@@ -21,6 +21,7 @@ MaxStepReward = 2.0
 #TODO: test the power of HORDQ with complex pits
 #TODO: use Q value of HORDQ as the reward
 #TODO: systematically test the agents performance of certain features (to spikey: do we need to add monsters speed into concern?)
+#TODO: gradually reduce the epsilon, otherwise the model agent will be stucked, (or hard-coded some random policy??)(or retrain after certain steps)
 
 HybridAgent = 0
 SarsaAgent = 1
@@ -113,7 +114,7 @@ class ModelAgent(Agent):
         #too hacky
 
         if self.agentType == SarsaAgent:
-            self.HORDQ_episilon = 0.05 #disable exploration for HORDQ
+            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
         else:
             self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
         
@@ -328,5 +329,6 @@ class ModelAgent(Agent):
         pass
 
     def agent_message(self,inMessage):
-        return None
+        print "heelo"
+        return "yes"
 

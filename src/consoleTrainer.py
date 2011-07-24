@@ -26,23 +26,45 @@ def main():
     #loadHelicopter(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,9]
      #loadAcrobot(whichTrainingMDP); #put the desired parameter set in where MDP is in [1,49] #0 is standard acrobot
      #loadPolyathlon(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,5]
-    #typeList = [121, 122, 123, 124, 125, 41, 42, 43, 44, 45]
-    #typeList = [121]
+    #typeList = [121, 122, 123, 124, 125, 41, 42, 43, 44, 45, 46, 47, 48 , 49, 50, 51, 52, 53] + range(126, 170)
+    #typeList = [121, 122, 123, 41, 42, 43]
+    #typeList = [121 for x in range(50)]
+    #typeList = [121 for x in range(50)]
+    #typeList = [4832 for x in range(20)]
+    #typeList = [1247 for x in range(50)]
     
+    typeList = [5657 for x in range(50)]
+    #typeList = [142 for x in range(50)]
+    #typeList = [42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
+    #typeList = [4647 for x in range(50)]
     
-    #for type in typeList:
-    while True:
-        for diff in range(1, 3):
+#42 1, 121 3, 121 4, 42 7, 4647 2, 126 2, 142, 2, 121 6, 5156 3, 5657 3, 4832 3
+#4832, 3-->very hard at 170
+#5657, 3-->very hard at 193, 235
+#3457, 3-->spikey fun
+#1247, 3-->medium pit, no spikey good, a lot of pits
+#1548, 3-->begin spikey
+#5478, 3-->easy level
+#1547, 3-->easy level, spikey and turtle
+    
+    for type in typeList:
+    #while True:
+        #for diff in range(6, 7):
+        for diff in range(3, 4):
+        #for diff in range(2, 3):
+        #for diff in range(2, 3):
+        #for diff in range(1, 2):
     #for numRun in range(0, 10):
-            type = int(random.random()*10000)
+            #type = int(random.random()*10000)
             episodeList.append((type, diff))
+            print RLGlue.RL_agent_message('Hello world')
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
 
             # and then,
             #		just run the experiment:
             RLGlue.RL_init()
-            episodesToRun = 1000
+            episodesToRun = 20
             totalSteps = 0
             for i in range(episodesToRun):
                 RLGlue.RL_episode(20000)

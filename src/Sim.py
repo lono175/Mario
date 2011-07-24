@@ -116,7 +116,7 @@ def Optimize(initWorld, dynaLearner, rewardLearner, MaxNode, PrevPlan, initActio
     print "--------------------"
     #initState.dump()
 
-    MaxState = 2
+    MaxState = 3
     MaxDepth = 5
     MinDepth = 4 #the first one is the previous action
     MaxDist = 6# usually we can get 8.5 without any barrier
