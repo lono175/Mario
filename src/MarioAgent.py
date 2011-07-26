@@ -67,7 +67,75 @@ def GenPasswd2(length=8, chars=string.letters + string.digits):
     return [choice(chars) for i in range(length)]
 
 	
+INIT, init -> new agent with parameter, RUN
+RUN, any action -> keep the original agent, RUN
+RUN, stop -> save the reward, INIT
 
+class MarioAgent(Agent):
+    def __init__(self):
+        self.state = INIT
+        
+    def agent_message(self, inMessage):
+        #if at the very begining, init everything
+        
+        print "heelo"
+        print inMessage
+        print "type: ", type(inMessage)
+        print pickle.loads(inMessage)
+        #print inMessage
+        return "yes"
+    
+    def agent_init(self, taskSpecString):
+
+        random.seed()
+        #self.agentType = SarsaAgent
+        self.agentType = ModelAgent
+        print "init"
+        print "type", self.agentType
+
+        #too hacky
+
+        if self.agentType == SarsaAgent:
+            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
+        else:
+            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
+        
+        self.epsilon = 0.01 #TODO: disable the exploration here
+        pseudoReward = 5
+        print "pseudo reward: ", pseudoReward
+        self.initPseudoReward = pseudoReward
+        self.agent.pseudoReward = pseudoReward
+
+        #parse action
+        print "begin: ", self.totalStep
+        feaNum = len(self.feaList[9])
+        print "feaNum", feaNum
+
+        print "SARSA Num:", len(self.agent.Q)
+
+        self.initLearner()
+        if feaNum == 0:
+            return
+        
+        if not self.AgentType() == SarsaAgent:
+            self.prune()
+
+        #retrain the classifier for each different run
+        #for action in self.actionList:
+            #self.DynamicLearner[action].add(self.feaList[action])
+        #self.RewardLearner.add(self.rewardFeaList)
+
+    def agent_start(self, obs):
+
+    def agent_step(self, reward, obs):
+
+    def agent_end(self, reward):
+            
+    def agent_cleanup(self):
+        pass
+
+    def agent_freeze(self):
+        pass
 
 
 

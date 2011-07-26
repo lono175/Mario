@@ -21,6 +21,7 @@ import random
 import pickle
 episodeList = []
 
+
 def main():
     whichTrainingMDP = 0
     # Uncomment ONE of the following lines to choose your experiment
@@ -48,7 +49,44 @@ def main():
 #1548, 3-->begin spikey
 #5478, 3-->easy level
 #1547, 3-->easy level, spikey and turtle
-    
+      self.agentType = ModelAgent
+        print "init"
+        print "type", self.agentType
+
+        #too hacky
+
+        if self.agentType == SarsaAgent:
+            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
+        else:
+            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
+        
+        self.epsilon = 0.01 #TODO: disable the exploration here
+        pseudoReward = 5
+        print "pseudo reward: ", pseudoReward
+        self.initPseudoReward = pseudoReward
+        self.agent.pseudoReward = pseudoReward
+
+        #parse action
+        print "begin: ", self.totalStep
+        feaNum = len(self.feaList[9])
+        print "feaNum", feaNum
+
+        print "SARSA Num:", len(self.agent.Q)
+
+        self.initLearner()
+        if feaNum == 0:
+            return
+        
+        if not self.AgentType() == SarsaAgent:
+            self.prune()
+
+
+    conf = {}
+    conf['epsilon'] = 0.01
+    conf['pseudoReward'] = 5
+    conf['type'] = SarsaAgent
+    conf['save'] = 1
+    conf[]
     for type in typeList:
     #while True:
         #for diff in range(6, 7):

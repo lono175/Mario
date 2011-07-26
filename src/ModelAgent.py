@@ -57,6 +57,15 @@ class ModelAgent(Agent):
 
         self.obsList = [] #TODO: remove me
         
+    def agent_message(self, inMessage):
+        #if at the very begining, init everything
+        
+        print "heelo"
+        print inMessage
+        print "type: ", type(inMessage)
+        print pickle.loads(inMessage)
+        #print inMessage
+        return "yes"
     
     def AgentType(self):
         return self.agentType
@@ -329,11 +338,4 @@ class ModelAgent(Agent):
     def agent_freeze(self):
         pass
 
-    def agent_message(self, inMessage):
-        print "heelo"
-        print inMessage
-        print "type: ", type(inMessage)
-        print pickle.loads(inMessage)
-        #print inMessage
-        return "yes"
 
