@@ -14,6 +14,7 @@ from Sim import Optimize, ExpandPath
 from numpy import array 
 import tool
 import orngTree
+import pickle #for agent_message
 NoTask = -1
 MaxStepReward = 2.0 
 
@@ -328,7 +329,11 @@ class ModelAgent(Agent):
     def agent_freeze(self):
         pass
 
-    def agent_message(self,inMessage):
+    def agent_message(self, inMessage):
         print "heelo"
+        print inMessage
+        print "type: ", type(inMessage)
+        print pickle.loads(inMessage)
+        #print inMessage
         return "yes"
 

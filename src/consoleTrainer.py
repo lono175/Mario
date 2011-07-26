@@ -18,7 +18,9 @@
 import rlglue.RLGlue as RLGlue
 from consoleTrainerHelper import *
 import random
+import pickle
 episodeList = []
+
 def main():
     whichTrainingMDP = 0
     # Uncomment ONE of the following lines to choose your experiment
@@ -57,7 +59,7 @@ def main():
     #for numRun in range(0, 10):
             #type = int(random.random()*10000)
             episodeList.append((type, diff))
-            print RLGlue.RL_agent_message('Hello world')
+            print RLGlue.RL_agent_message(pickle.dumps(['Hello world']))
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
 
