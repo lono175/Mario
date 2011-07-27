@@ -1,7 +1,7 @@
 import random
 import orange
 from rlglue.agent.Agent import Agent
-from Def import getAllAction, makeAction, dumpAction, InPitPenalty, DeathPenalty, Precision
+from Def import *
 from rlglue.types import Action
 #from LinearSARSA import LinearSARSA
 #from LinearHORDQ import LinearHORDQ
@@ -24,9 +24,6 @@ MaxStepReward = 2.0
 #TODO: systematically test the agents performance of certain features (to spikey: do we need to add monsters speed into concern?)
 #TODO: gradually reduce the epsilon, otherwise the model agent will be stucked, (or hard-coded some random policy??)(or retrain after certain steps)
 
-HybridAgent = 0
-SarsaAgent = 1
-ModelAgent = 2
 class ModelAgent(Agent):
     def __init__(self):
         self.actionList = getAllAction()
@@ -57,15 +54,20 @@ class ModelAgent(Agent):
 
         self.obsList = [] #TODO: remove me
         
-    def agent_message(self, inMessage):
-        #if at the very begining, init everything
-        
-        print "heelo"
-        print inMessage
-        print "type: ", type(inMessage)
-        print pickle.loads(inMessage)
-        #print inMessage
-        return "yes"
+    def setParam(self, epsilon, pseudoReward, type):
+        #self.agentType = SarsaAgent
+        self.agentType = type
+        self.initPseudoReward = pseudoReward
+        self.epsilon = epsilon
+
+
+        #too hacky
+        if self.agentType == SarsaAgent:
+            self.HORDQ_episilon = self.epsilon 
+        else:
+            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ + model-based agent
+
+        self.agent.pseudoReward = self.initPseudoReward
     
     def AgentType(self):
         return self.agentType
@@ -115,24 +117,8 @@ class ModelAgent(Agent):
 
     def agent_init(self, taskSpecString):
 
-        random.seed()
-        #self.agentType = SarsaAgent
-        self.agentType = ModelAgent
-        print "init"
-        print "type", self.agentType
-
-        #too hacky
-
-        if self.agentType == SarsaAgent:
-            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
-        else:
-            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
-        
-        self.epsilon = 0.01 #TODO: disable the exploration here
-        pseudoReward = 5
-        print "pseudo reward: ", pseudoReward
-        self.initPseudoReward = pseudoReward
-        self.agent.pseudoReward = pseudoReward
+        print "init type", self.agentType
+        print "pseudo reward: ", self.initPseudoReward
 
         #parse action
         print "begin: ", self.totalStep
@@ -148,11 +134,6 @@ class ModelAgent(Agent):
         if not self.AgentType() == SarsaAgent:
             self.prune()
 
-        #retrain the classifier for each different run
-        #for action in self.actionList:
-            #self.DynamicLearner[action].add(self.feaList[action])
-        #self.RewardLearner.add(self.rewardFeaList)
-
     def agent_start(self, obs):
         state = WorldState(obs)
         self.lastState = state
@@ -163,7 +144,6 @@ class ModelAgent(Agent):
 
             action = self.agent.start(fea, NoTask)
         else:
-            print self.isModelReady()
             self.agent.epsilon = self.HORDQ_episilon
             possibleAction = self.agent.getPossibleAction(fea)
             action = self.planning(state, possibleAction)

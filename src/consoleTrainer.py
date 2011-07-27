@@ -19,6 +19,10 @@ import rlglue.RLGlue as RLGlue
 from consoleTrainerHelper import *
 import random
 import pickle
+import os
+import time
+import threading
+from Def import *
 episodeList = []
 
 
@@ -36,7 +40,7 @@ def main():
     #typeList = [4832 for x in range(20)]
     #typeList = [1247 for x in range(50)]
     
-    typeList = [5657 for x in range(50)]
+    typeList = [5657 for x in range(3)]
     #typeList = [142 for x in range(50)]
     #typeList = [42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
     #typeList = [4647 for x in range(50)]
@@ -49,71 +53,65 @@ def main():
 #1548, 3-->begin spikey
 #5478, 3-->easy level
 #1547, 3-->easy level, spikey and turtle
-      self.agentType = ModelAgent
-        print "init"
-        print "type", self.agentType
 
-        #too hacky
+    #conf = {}
+    #conf['epsilon'] = 0.01
+    #conf['pseudoReward'] = 5
+    #conf['type'] = SarsaAgent
+    #conf['cmd'] = ActionInit
 
-        if self.agentType == SarsaAgent:
-            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
-        else:
-            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
-        
-        self.epsilon = 0.01 #TODO: disable the exploration here
-        pseudoReward = 5
-        print "pseudo reward: ", pseudoReward
-        self.initPseudoReward = pseudoReward
-        self.agent.pseudoReward = pseudoReward
+    for agentType in [SarsaAgent, ModelAgent]:
+    #for agentType in [SarsaAgent]:
+        for epsilon in [0.01]:
+            for pseudoReward in [5]:
+                conf = {}
+                conf['epsilon'] = epsilon
+                conf['pseudoReward'] = pseudoReward
+                conf['type'] = agentType
+                conf['cmd'] = ActionInit
 
-        #parse action
-        print "begin: ", self.totalStep
-        feaNum = len(self.feaList[9])
-        print "feaNum", feaNum
+                #t = threading.Thread(target = lambda : os.system('/cygdrive/e/python26/python.exe ./MarioAgent.py'))
+                t = threading.Thread(target = lambda : os.system('e:\\python26\\python.exe ./MarioAgent.py'))
+                os.system('bash ./RLInit.bash')
 
-        print "SARSA Num:", len(self.agent.Q)
+                t.start()
+                time.sleep(5)
+                RLGlue.RL_agent_message(pickle.dumps(conf))
 
-        self.initLearner()
-        if feaNum == 0:
-            return
-        
-        if not self.AgentType() == SarsaAgent:
-            self.prune()
+                for type in typeList:
+                #while True:
+                    #for diff in range(6, 7):
+                    for diff in range(3, 4):
+                    #for diff in range(2, 3):
+                    #for diff in range(2, 3):
+                    #for diff in range(1, 2):
+                #for numRun in range(0, 10):
+                        #type = int(random.random()*10000)
+                        episodeList.append((type, diff))
+                        loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
+                        RLGlue.RL_init()
+                        episodesToRun = 2
+                        totalSteps = 0
+                        for i in range(episodesToRun):
+                            RLGlue.RL_episode(400)
+                            thisSteps = RLGlue.RL_num_steps()
+                            print "Total steps in episode %d is %d" %(i, thisSteps)
+                            totalSteps += thisSteps
 
-    conf = {}
-    conf['epsilon'] = 0.01
-    conf['pseudoReward'] = 5
-    conf['type'] = SarsaAgent
-    conf['save'] = 1
-    conf[]
-    for type in typeList:
-    #while True:
-        #for diff in range(6, 7):
-        for diff in range(3, 4):
-        #for diff in range(2, 3):
-        #for diff in range(2, 3):
-        #for diff in range(1, 2):
-    #for numRun in range(0, 10):
-            #type = int(random.random()*10000)
-            episodeList.append((type, diff))
-            print RLGlue.RL_agent_message(pickle.dumps(['Hello world']))
-            loadMario(True, True, type, 0, diff, whichTrainingMDP);
+                        print "Total steps : %d\n" % (totalSteps)
+                        RLGlue.RL_cleanup()
+                conf = {}
+                conf['cmd'] = ActionStop
+                RLGlue.RL_agent_message(pickle.dumps(conf))
+                conf = {}
+                conf['cmd'] = ActionKill
+                RLGlue.RL_agent_message(pickle.dumps(conf))
+                #os.system('bash ./RLCleanup.bash')
+                t.join()
+                time.sleep(5)
+                print "next agent............."
 
-
-            # and then,
-            #		just run the experiment:
-            RLGlue.RL_init()
-            episodesToRun = 20
-            totalSteps = 0
-            for i in range(episodesToRun):
-                RLGlue.RL_episode(20000)
-                thisSteps = RLGlue.RL_num_steps()
-                print "Total steps in episode %d is %d" %(i, thisSteps)
-                totalSteps += thisSteps
-
-            print "Total steps : %d\n" % (totalSteps)
-            RLGlue.RL_cleanup()
 def dumpEpisode():
     print episodeList
 if __name__ == "__main__":

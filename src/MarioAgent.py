@@ -20,11 +20,14 @@
 import sys
 from rlglue.types import Observation
 from rlglue.agent import AgentLoader as AgentLoader
+from rlglue.agent.Agent import Agent
 from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 from LambdaSARSA import LambdaSARSA
 from FeatureMario import *
 from ML import *
 import tool
+import pickle
+import time
 
 
 #statistics
@@ -46,7 +49,7 @@ import string
 episilon = 0.005
 
 MaxY = 15
-def saveObj(obj):
+def saveObj(obj, filename):
     print "descructing...."
     #actionList = getAllAction()
     #initialQ = 0
@@ -55,7 +58,8 @@ def saveObj(obj):
     #obj.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
     obj.DynamicLearner = {}
     obj.RewardLearner = []
-    tool.Save(obj, "mario.db")
+    tool.Save(obj, filename)
+    print "done"
 
 def GenPasswd():
     chars = string.letters + string.digits
@@ -67,69 +71,60 @@ def GenPasswd2(length=8, chars=string.letters + string.digits):
     return [choice(chars) for i in range(length)]
 
 	
-INIT, init -> new agent with parameter, RUN
-RUN, any action -> keep the original agent, RUN
-RUN, stop -> save the reward, INIT
+#INIT, init -> new agent with parameter, RUN
+#RUN, any action -> keep the original agent, RUN
+#RUN, stop -> save the reward, INIT
 
+def GetFileName(agent):
+    name = 'mario_'
+    if agent.agentType == HybridAgent:
+        name = name + 'hybrid_' 
+    elif agent.agentType == SarsaAgent:
+        name = name + 'sarsa_' 
+    elif agent.agentType == ModelAgent:
+        name = name + 'model_' 
+
+    name = name + str(agent.episodeNum) + '_'
+    name = name + str(agent.epsilon) + '_'
+    name = name + str(agent.initPseudoReward)
+
+    name = name + '.db'
+    return name
+    
+    
 class MarioAgent(Agent):
     def __init__(self):
         self.state = INIT
         
     def agent_message(self, inMessage):
-        #if at the very begining, init everything
-        
-        print "heelo"
-        print inMessage
-        print "type: ", type(inMessage)
-        print pickle.loads(inMessage)
-        #print inMessage
-        return "yes"
+        msg = pickle.loads(inMessage)
+        action = msg['cmd']
+
+        if self.state == INIT and action == ActionInit:
+            #if at the very begining, init everything
+            self.agent = ModelAgent()
+            self.agent.setParam(epsilon = msg['epsilon'], pseudoReward = msg['pseudoReward'], type = msg['type'])
+            self.state = RUN
+        elif self.state == RUN and action == ActionStop:
+            filename = GetFileName(self.agent)
+            saveObj(self.agent, filename)
+            self.state = INIT
+        elif action == ActionKill:
+            exit()
+        else:
+            assert(0)
     
     def agent_init(self, taskSpecString):
-
-        random.seed()
-        #self.agentType = SarsaAgent
-        self.agentType = ModelAgent
-        print "init"
-        print "type", self.agentType
-
-        #too hacky
-
-        if self.agentType == SarsaAgent:
-            self.HORDQ_episilon = 0.01 #disable exploration for HORDQ
-        else:
-            self.HORDQ_episilon = 0.00 #disable exploration for HORDQ
-        
-        self.epsilon = 0.01 #TODO: disable the exploration here
-        pseudoReward = 5
-        print "pseudo reward: ", pseudoReward
-        self.initPseudoReward = pseudoReward
-        self.agent.pseudoReward = pseudoReward
-
-        #parse action
-        print "begin: ", self.totalStep
-        feaNum = len(self.feaList[9])
-        print "feaNum", feaNum
-
-        print "SARSA Num:", len(self.agent.Q)
-
-        self.initLearner()
-        if feaNum == 0:
-            return
-        
-        if not self.AgentType() == SarsaAgent:
-            self.prune()
-
-        #retrain the classifier for each different run
-        #for action in self.actionList:
-            #self.DynamicLearner[action].add(self.feaList[action])
-        #self.RewardLearner.add(self.rewardFeaList)
+        return self.agent.agent_init(taskSpecString)
 
     def agent_start(self, obs):
+        return self.agent.agent_start(obs)
 
     def agent_step(self, reward, obs):
+        return self.agent.agent_step(reward, obs)
 
     def agent_end(self, reward):
+        return self.agent.agent_end(reward)
             
     def agent_cleanup(self):
         pass
@@ -145,9 +140,14 @@ if __name__=="__main__":
     import atexit
     #agent = tool.Load("mario.db")
     #agent = LinearSarsaAgent()
-    agent = ModelAgent()
-    atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
+    #atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
     #AgentLoader.loadAgent(agent)
+
+    #while True:
+    print 'loading agent...'
+    agent = MarioAgent()
     
     AgentLoader.loadAgent(agent)
+    print 'agent done'
+    #time.sleep(2)
