@@ -16,20 +16,17 @@ if __name__ == '__main__':
     pseudoReward = 5
 
     conf = tool.Load('conf')
+    typeList = conf['typeList']
     #conf = {}
     #conf['epsilon'] = epsilon
     #conf['pseudoReward'] = pseudoReward
     #conf['type'] = agentType
     #conf['cmd'] = ActionInit
 
-    t = threading.Thread(target = lambda : os.system('d:\\python26\\python.exe ./MarioAgent.py'))
     os.system('bash ./RLInit.bash')
 
-    t.start()
     #time.sleep(5)
-    RLGlue.RL_agent_message(pickle.dumps(conf))
 
-    typeList = [5657 for x in range(3)]
     for type in typeList:
 #while True:
         #for diff in range(6, 7):
@@ -43,7 +40,7 @@ if __name__ == '__main__':
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
             RLGlue.RL_init()
-            episodesToRun = 2
+            episodesToRun = 10
             totalSteps = 0
             for i in range(episodesToRun):
                 RLGlue.RL_episode(400)
@@ -53,13 +50,5 @@ if __name__ == '__main__':
 
             print "Total steps : %d\n" % (totalSteps)
             RLGlue.RL_cleanup()
-    conf = {}
-    conf['cmd'] = ActionStop
-    RLGlue.RL_agent_message(pickle.dumps(conf))
-    conf = {}
-    conf['cmd'] = ActionKill
-    RLGlue.RL_agent_message(pickle.dumps(conf))
-#os.system('bash ./RLCleanup.bash')
-    t.join()
     #time.sleep(5)
     print "next agent............."
