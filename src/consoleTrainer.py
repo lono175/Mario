@@ -22,12 +22,13 @@ import pickle
 import os
 import time
 import threading
+import tool
 from Def import *
 episodeList = []
 
 
 def main():
-    whichTrainingMDP = 0
+    #whichTrainingMDP = 0
     # Uncomment ONE of the following lines to choose your experiment
     #loadTetris(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,19]
     #loadHelicopter(whichTrainingMDP); #put the desired parameter set in where MDP is in [0,9]
@@ -70,51 +71,55 @@ def main():
                 conf['type'] = agentType
                 conf['cmd'] = ActionInit
 
-                #t = threading.Thread(target = lambda : os.system('/cygdrive/e/python26/python.exe ./MarioAgent.py'))
-                t = threading.Thread(target = lambda : os.system('e:\\python26\\python.exe ./MarioAgent.py'))
-                os.system('bash ./RLInit.bash')
+                tool.Save(conf, 'conf')
+                os.system('/cygdrive/d/python26/python.exe ./trainer.py')
 
-                t.start()
-                time.sleep(5)
-                RLGlue.RL_agent_message(pickle.dumps(conf))
 
-                for type in typeList:
-                #while True:
-                    #for diff in range(6, 7):
-                    for diff in range(3, 4):
-                    #for diff in range(2, 3):
-                    #for diff in range(2, 3):
-                    #for diff in range(1, 2):
-                #for numRun in range(0, 10):
-                        #type = int(random.random()*10000)
-                        episodeList.append((type, diff))
-                        loadMario(True, True, type, 0, diff, whichTrainingMDP);
+                ##t = threading.Thread(target = lambda : os.system('/cygdrive/e/python26/python.exe ./MarioAgent.py'))
+                #t = threading.Thread(target = lambda : os.system('e:\\python26\\python.exe ./MarioAgent.py'))
+                #os.system('bash ./RLInit.bash')
 
-                        RLGlue.RL_init()
-                        episodesToRun = 2
-                        totalSteps = 0
-                        for i in range(episodesToRun):
-                            RLGlue.RL_episode(400)
-                            thisSteps = RLGlue.RL_num_steps()
-                            print "Total steps in episode %d is %d" %(i, thisSteps)
-                            totalSteps += thisSteps
+                #t.start()
+                #time.sleep(5)
+                #RLGlue.RL_agent_message(pickle.dumps(conf))
 
-                        print "Total steps : %d\n" % (totalSteps)
-                        RLGlue.RL_cleanup()
-                conf = {}
-                conf['cmd'] = ActionStop
-                RLGlue.RL_agent_message(pickle.dumps(conf))
-                conf = {}
-                conf['cmd'] = ActionKill
-                RLGlue.RL_agent_message(pickle.dumps(conf))
-                #os.system('bash ./RLCleanup.bash')
-                t.join()
-                time.sleep(5)
-                print "next agent............."
+                #for type in typeList:
+                ##while True:
+                    ##for diff in range(6, 7):
+                    #for diff in range(3, 4):
+                    ##for diff in range(2, 3):
+                    ##for diff in range(2, 3):
+                    ##for diff in range(1, 2):
+                ##for numRun in range(0, 10):
+                        ##type = int(random.random()*10000)
+                        #episodeList.append((type, diff))
+                        #loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
-def dumpEpisode():
-    print episodeList
+                        #RLGlue.RL_init()
+                        #episodesToRun = 2
+                        #totalSteps = 0
+                        #for i in range(episodesToRun):
+                            #RLGlue.RL_episode(400)
+                            #thisSteps = RLGlue.RL_num_steps()
+                            #print "Total steps in episode %d is %d" %(i, thisSteps)
+                            #totalSteps += thisSteps
+
+                        #print "Total steps : %d\n" % (totalSteps)
+                        #RLGlue.RL_cleanup()
+                #conf = {}
+                #conf['cmd'] = ActionStop
+                #RLGlue.RL_agent_message(pickle.dumps(conf))
+                #conf = {}
+                #conf['cmd'] = ActionKill
+                #RLGlue.RL_agent_message(pickle.dumps(conf))
+                ##os.system('bash ./RLCleanup.bash')
+                #t.join()
+                #time.sleep(5)
+                #print "next agent............."
+
+#def dumpEpisode():
+    #print episodeList
 if __name__ == "__main__":
     import atexit
-    atexit.register(dumpEpisode) #workaround to the NoneType error in hte descructorn
+    #atexit.register(dumpEpisode) #workaround to the NoneType error in hte descructorn
     main()
