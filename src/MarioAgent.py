@@ -22,12 +22,14 @@ from rlglue.types import Observation
 from rlglue.agent import AgentLoader as AgentLoader
 from rlglue.agent.Agent import Agent
 from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
-from LambdaSARSA import LambdaSARSA
-from FeatureMario import *
-from ML import *
+#from LambdaSARSA import LambdaSARSA
+#from FeatureMario import *
+#from ML import *
+from Def import *
 import tool
 import pickle
 import time
+import random
 
 
 #statistics
@@ -77,11 +79,11 @@ def GenPasswd2(length=8, chars=string.letters + string.digits):
 
 def GetFileName(agent):
     name = 'mario_'
-    if agent.agentType == HybridAgent:
+    if agent.agentType == AgentType.HybridAgent:
         name = name + 'hybrid_' 
-    elif agent.agentType == SarsaAgent:
+    elif agent.agentType == AgentType.SarsaAgent:
         name = name + 'sarsa_' 
-    elif agent.agentType == ModelAgent:
+    elif agent.agentType == AgentType.ModelAgent:
         name = name + 'model_' 
 
     name = name + str(agent.episodeNum) + '_'
@@ -105,13 +107,20 @@ class MarioAgent(Agent):
             self.agent = ModelAgent()
             self.agent.setParam(epsilon = msg['epsilon'], pseudoReward = msg['pseudoReward'], type = msg['type'])
             self.state = RUN
+            print "init"
         elif self.state == RUN and action == ActionStop:
             filename = GetFileName(self.agent)
             saveObj(self.agent, filename)
             self.state = INIT
+            print "run"
         elif action == ActionKill:
+            filename = GetFileName(self.agent)
+            filename = filename + '.bak'
+            saveObj(self.agent, filename)
             exit()
         else:
+            print "current state: ", self.state
+            print "action: ", action
             assert(0)
     
     def agent_init(self, taskSpecString):
@@ -138,7 +147,6 @@ class MarioAgent(Agent):
 from ModelAgent import ModelAgent
 if __name__=="__main__":        
     import atexit
-    #agent = tool.Load("mario.db")
     #agent = LinearSarsaAgent()
     #atexit.register(lambda: saveObj(agent)) #workaround to the NoneType error in hte descructorn
     #agent = tool.Load("Speed.db")
@@ -146,8 +154,13 @@ if __name__=="__main__":
 
     #while True:
     print 'loading agent...'
+    #agent = tool.Load("mario_sarsa_49_0.01_0.db")
     agent = MarioAgent()
     
     AgentLoader.loadAgent(agent)
     print 'agent done'
+    filename = GetFileName(agent.agent)
+    filename = filename + '.bak2'
+    saveObj(agent.agent, filename)
+    
     #time.sleep(2)

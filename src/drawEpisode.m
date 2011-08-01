@@ -3,15 +3,20 @@ close all
 %load transfer.csv
 %
 fileList = {
-            'reward_sarsa',
-            'reward_pun0',
+            %'mario_model_999_0_01_0',
+            %'mario_995_0_01_0',
+            'mario_model_999_0_01_5',
+            'mario_model_999_0_01_20',
+            'mario_model_999_0_02_2',
+            'mario_sarsa_999_0_01_0',
+            'mario_sarsa_999_0_02_0'
             %'reward_pun2',
-            'reward_pun5',
+            %'reward_pun5',
             %'reward_pun10',
             %'reward_pun20',
             %'reward_pun50',
-            'reward_pun60',
-            'reward_RORDQ'
+            %'reward_pun60',
+            %'reward_RORDQ'
             %'reward_pun105'
 }
 %fileList = {'RRL_test_3333__1_1__3', 'RRL_test_2000__2_1__5', 'RRL_test_2000__1_2__5'}
@@ -24,12 +29,12 @@ for i = 1:length(fileList)
     filename = [name '.csv']
     load(filename)
     eval(['data = ' name ';'])
-    q = [data(:, 1) data(:, 3)];
+    q = [data(:, 1) data(:, 2)];
     [start sumT] = gridSum(q);
     plot(start/100000, sumT, char(plotSpec(i)), 'LineWidth', 3, 'Color', colorSpec{i})
     hold on
 end
-axis([0, 20, -160, -10])
+axis([0, 1, 0, 350])
 xlabel('Number of steps (100,000s)')
 ylabel('Reward per episode')
 %legend( 'SARSA', 'Model+HORDQ(0)', 'Model+HORDQ(5)', 'Model+HORDQ(10)', 'Model+HORDQ(20)', 'Model+HORDQ(50)', 'Model+HORDQ(60)', 'Model+MaxQ')

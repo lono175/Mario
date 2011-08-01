@@ -40,7 +40,10 @@ def main():
     #typeList = [4832 for x in range(20)]
     #typeList = [1247 for x in range(50)]
     
-    typeList = [5657 for x in range(100)]
+    maxLen = 50
+    typeList = [1247 for x in range(100)]
+    typeLen = len(typeList)
+    partList = [typeList[i*maxLen : min(typeLen, (i+1)*maxLen)] for i in range(typeLen/maxLen)]
     #typeList = [142 for x in range(50)]
     #typeList = [42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
     #typeList = [4647 for x in range(50)]
@@ -55,32 +58,47 @@ def main():
 #1547, 3-->easy level, spikey and turtle
 
 
-    for agentType in [SarsaAgent, ModelAgent]:
-    #for agentType in [SarsaAgent]:
+    for agentType in [AgentType.ModelAgent]:
+    #for agentType in [AgentType.SarsaAgent, AgentType.ModelAgent]:
+    #for agentType in [AgentType.SarsaAgent]:
+        #for epsilon in [0.01, 0.02, 0.04]:
         for epsilon in [0.01]:
-            for pseudoReward in [5]:
+        #for epsilon in [0.02, 0.01, 0.04]:
+        #for epsilon in [0.01, 0.02, 0.04]:
+        #for epsilon in [0.02, 0.04]:
+            #rewardList = [0, 2, 20, 5]
+            rewardList = [20]
+            #rewardList = [2]
+            if agentType == AgentType.SarsaAgent:
+                rewardList = [0]
+            for pseudoReward in rewardList:
+                t = threading.Thread(target = lambda : os.system('e:\\python26\\python.exe ./MarioAgent.py'))
+                t.start()
+
+                #conf = {}
                 conf = {}
                 conf['epsilon'] = epsilon
                 conf['pseudoReward'] = pseudoReward
                 conf['type'] = agentType
                 conf['cmd'] = ActionInit
-                t = threading.Thread(target = lambda : os.system('d:\\python26\\python.exe ./MarioAgent.py'))
-                t.start()
-                RLGlue.RL_agent_message(pickle.dumps(conf))
-
-                conf = {}
                 conf['typeList'] = typeList
                 tool.Save(conf, 'conf')
-                os.system('/cygdrive/d/python26/python.exe ./trainer.py')
+                trainer = threading.Thread(target = lambda : os.system('e:\\python26\\python.exe ./trainer.py'))
+                trainer.start()
+                #os.system('e:\\python26\\python.exe ./trainer.py')
 
-                conf = {}
-                conf['cmd'] = ActionStop
-                RLGlue.RL_agent_message(pickle.dumps(conf))
+                #print "---------1"
+                #conf = {}
+                #conf['cmd'] = ActionStop
+                #RLGlue.RL_agent_message(pickle.dumps(conf))
+                #print "---------2"
                 #conf = {}
                 #conf['cmd'] = ActionKill
                 #RLGlue.RL_agent_message(pickle.dumps(conf))
 #os.system('bash ./RLCleanup.bash')
+                trainer.join()
                 t.join()
+                time.sleep(5)
 
 
 if __name__ == "__main__":

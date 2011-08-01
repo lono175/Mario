@@ -11,9 +11,9 @@ if __name__ == '__main__':
    
     episodeList = []
     whichTrainingMDP = 0
-    agentType = SarsaAgent
-    epsilon = 0.01
-    pseudoReward = 5
+    #agentType = SarsaAgent
+    #epsilon = 0.01
+    #pseudoReward = 5
 
     conf = tool.Load('conf')
     typeList = conf['typeList']
@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     #time.sleep(5)
 
+    RLGlue.RL_agent_message(pickle.dumps(conf))
     for type in typeList:
 #while True:
         #for diff in range(6, 7):
@@ -39,11 +40,12 @@ if __name__ == '__main__':
             episodeList.append((type, diff))
             loadMario(True, True, type, 0, diff, whichTrainingMDP);
 
+
             RLGlue.RL_init()
             episodesToRun = 10
             totalSteps = 0
             for i in range(episodesToRun):
-                RLGlue.RL_episode(400)
+                RLGlue.RL_episode(1000000)
                 thisSteps = RLGlue.RL_num_steps()
                 print "Total steps in episode %d is %d" %(i, thisSteps)
                 totalSteps += thisSteps
@@ -51,4 +53,13 @@ if __name__ == '__main__':
             print "Total steps : %d\n" % (totalSteps)
             RLGlue.RL_cleanup()
     #time.sleep(5)
+    #print "---------1"
+    conf = {}
+    conf['cmd'] = ActionStop
+    RLGlue.RL_agent_message(pickle.dumps(conf))
+    print "---------2"
+    conf = {}
+    conf['cmd'] = ActionKill
+    RLGlue.RL_agent_message(pickle.dumps(conf))
+    
     print "next agent............."

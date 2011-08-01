@@ -7,9 +7,10 @@ ActionInit = 0
 ActionStop = 1
 ActionKill = 2
 
-HybridAgent = 0
-SarsaAgent = 1
-ModelAgent = 2
+class AgentType:
+    HybridAgent = 0
+    SarsaAgent = 1
+    ModelAgent = 2
 
 InPitPenalty = -50.0
 DeathPenalty = -50.0

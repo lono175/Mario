@@ -61,3 +61,9 @@ def SaveToCSV(list, filename):
             FILE.write(', ')
         FILE.write('\n')
     FILE.close()
+from MarioAgent import *
+if __name__ == '__main__':
+    agent = Load('mario_sarsa_999_0.01_0.db')
+    SaveToCSV(agent.distList, 'mario_sarsa_999_0_01_0.csv')
+
+   

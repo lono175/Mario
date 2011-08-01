@@ -38,7 +38,7 @@ class ModelAgent(Agent):
         self.rewardAgent = RewardSarsa(alpha, 0.05, 0, self.actionList, initialQ, dumpCount)
         #self.agent = LambdaSARSA(0.10, 0.05, 0.90, actionList, initialQ, dumpCount)
         self.totalStep = 0
-        self.rewardList = []
+        #self.rewardList = []
         self.distList = []
 
         self.feaList = {}
@@ -46,7 +46,7 @@ class ModelAgent(Agent):
             self.feaList[action] = []
 
         self.rewardFeaList = []
-        self.episodeNum = 0
+        self.episodeNum = -1
 
 
         self.lastPlan = []
@@ -62,7 +62,7 @@ class ModelAgent(Agent):
 
 
         #too hacky
-        if self.agentType == SarsaAgent:
+        if self.agentType == AgentType.SarsaAgent:
             self.HORDQ_episilon = self.epsilon 
         else:
             self.HORDQ_episilon = 0.00 #disable exploration for HORDQ + model-based agent
@@ -74,7 +74,7 @@ class ModelAgent(Agent):
 
     #return True when we can start using our model
     def isModelReady(self):
-        if self.AgentType() == SarsaAgent:
+        if self.AgentType() == AgentType.SarsaAgent:
             return False
         if self.DynamicLearner == {} or self.DynamicLearner[0].empty():
             return False
@@ -110,7 +110,7 @@ class ModelAgent(Agent):
             commonVar.pop(0)
             for action in self.actionList:
                 if action == 9:
-                    maxFeature = 6000
+                    maxFeature = 10000
                 else:
                     maxFeature = 3000
                 self.DynamicLearner[action] = Learner(commonVar, classVarList, maxFeature)
@@ -131,27 +131,30 @@ class ModelAgent(Agent):
         if feaNum == 0:
             return
         
-        if not self.AgentType() == SarsaAgent:
+        if not self.AgentType() == AgentType.SarsaAgent:
             self.prune()
 
     def agent_start(self, obs):
         state = WorldState(obs)
         self.lastState = state
         fea = getSarsaFeature(state, NoTask)
-        if not self.isModelReady():
-            if not self.AgentType() == SarsaAgent:
-                self.agent.epsilon = 0.05 #encourage exploration
-
-            action = self.agent.start(fea, NoTask)
-        else:
+        if self.isModelReady():
             self.agent.epsilon = self.HORDQ_episilon
             possibleAction = self.agent.getPossibleAction(fea)
             action = self.planning(state, possibleAction)
             action = self.agent.start(fea, action)
+        else: 
+            if self.AgentType() == AgentType.SarsaAgent:
+                self.agent.epsilon = self.HORDQ_episilon
+            else:
+                self.agent.epsilon = 0.05 #encourage exploration
+            action = self.agent.start(fea, NoTask)
         rewardFea = getRewardFeature(state, NoTask)
         self.rewardAgent.start(rewardFea, action)
         self.stepNum = 0
         self.lastAction = action
+        self.distList.append(()) #put a dummy one
+        self.episodeNum = self.episodeNum + 1
         return makeAction(action)
 
     def agent_step(self, reward, obs):
@@ -237,7 +240,7 @@ class ModelAgent(Agent):
             else:
                 print "pass model-------------"
         else:
-            if not self.AgentType() == SarsaAgent:
+            if not self.AgentType() == AgentType.SarsaAgent:
                 self.feaList[lastActionId].append(modelFea)
 
 
@@ -266,6 +269,8 @@ class ModelAgent(Agent):
         self.stepNum = self.stepNum + 1
 
 
+        self.distList[len(self.distList)-1] = (self.totalStep + self.stepNum, self.lastState.mario.x, self.episodeNum, 0)
+
         return makeAction(action)
 
     def agent_end(self, reward):
@@ -291,7 +296,6 @@ class ModelAgent(Agent):
         print "pre reward: ", self.rewardAgent.getQ(rewardFea, self.lastAction)
 
         print "end: ", reward, " step: ", self.stepNum, " dist:", self.lastState.mario.x
-        self.episodeNum = self.episodeNum + 1
         self.totalStep = self.totalStep + self.stepNum
 
         #if self.DynamicLearner.empty() or self.RewardLearner.empty():
@@ -299,8 +303,10 @@ class ModelAgent(Agent):
             #self.agent.end(reward)
             
 
-        self.rewardList.append(reward)
-        self.distList.append((self.totalStep, self.lastState.mario.x, self.episodeNum))
+        #self.rewardList.append(reward)
+        if reward < 10: #only the reward on the finish line counts
+            reward = 0
+        self.distList[len(self.distList)-1] = (self.totalStep, self.lastState.mario.x, self.episodeNum, reward)
 
         #print the decision tree
         #treeList = getClassifier(self.feaList)
@@ -308,14 +314,16 @@ class ModelAgent(Agent):
         #printTree(treeList[2])
         #res =  classify(data, treeList)
         
-        if self.episodeNum % 10000 == 0:
-            print "dump:", self.episodeNum
-            tool.Save(self, "mario" + str(self.episodeNum) + ".db")
+        #if self.episodeNum % 10000 == 0:
+            #print "dump:", self.episodeNum
+            #tool.Save(self, "mario" + str(self.episodeNum) + ".db")
             
     def agent_cleanup(self):
         pass
 
     def agent_freeze(self):
+        pass
+    def agent_message(self, inMessage):
         pass
 
 

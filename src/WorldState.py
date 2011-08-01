@@ -135,6 +135,8 @@ def getMonsterList(obs):
 
         m.x = obs.doubleArray[4*id]
         m.y = MaxY - obs.doubleArray[4*id+1] #use left-top corner as the origin
+        if m.y == int(m.y):
+            m.y = m.y - 0.00000000001 #to resolve the rounding error for the Monster Grid Map
         m.sx = obs.doubleArray[4*id+2]
         m.sy = -obs.doubleArray[4*id+3]       #use left-top corner as the origin;
         monList.append(m)
@@ -159,6 +161,11 @@ def getMonsterGridMap(obs):
     if not x in range(MaxX) or not y in range(MaxY):
         print "out of boundary:", x, " ", y
     else:
+        if map[y, x] != ord('M'):
+            print map
+            print "coord: ", y, " ", x
+            print "ori coord: ", mario.y, " ", mario.x
+            print "originX: ", originX
         assert(map[y, x] == ord('M'))
         map[y, x] = ord(' ')
 

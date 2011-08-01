@@ -157,9 +157,9 @@ class LinearSarsaAgent(Agent):
         #printTree(treeList[2])
         #res =  classify(data, treeList)
         
-        if self.episodeNum % 10000 == 0:
-            print "dump:", self.episodeNum
-            tool.Save(self, "mario" + str(self.episodeNum) + ".db")
+        #if self.episodeNum % 10000 == 0:
+            #print "dump:", self.episodeNum
+            #tool.Save(self, "mario" + str(self.episodeNum) + ".db")
             
     def agent_cleanup(self):
         pass

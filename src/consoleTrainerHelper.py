@@ -29,35 +29,41 @@ UNLOADQUERY = 3
 
 # (string,ParameterHolder) -> void
 def load(envNameString, theParams):
-	loadPayLoad = envNameString+":"+theParams.stringSerialize()
-	theRequest = "TO=%d FROM=%d CMD=%d VALTYPE=%d VALS=%s" % (ENVSHELL, BENCHMARK, LOADQUERY, STRINGLIST,loadPayLoad)
-	RLGlue.RL_env_message(theRequest)
+    loadPayLoad = envNameString+":"+theParams.stringSerialize()
+    theRequest = "TO=%d FROM=%d CMD=%d VALTYPE=%d VALS=%s" % (ENVSHELL, BENCHMARK, LOADQUERY, STRINGLIST,loadPayLoad)
+    RLGlue.RL_env_message(theRequest)
 
 #(string) -> ParameterHolder
 def preload(envNameString):
-	theRequest = "TO=%d FROM=%d CMD=%d VALTYPE=%d VALS=NULL" % (ENVSHELL, BENCHMARK, LISTQUERY, NOVALUE)
-	theResponse = RLGlue.RL_env_message(theRequest)
-	lastColonPos = theResponse.rfind("=")
-	thePayLoad = theResponse[lastColonPos+1:]
-	if thePayLoad[-1] == ':':
-		thePayLoad = thePayLoad[:-1]
-	items = thePayLoad.split(':')
-	theNames = []
-	theParamHolders = []
-	for i in range(1,len(items),2):
-		theNames.append(items[i])
-		theParamHolders.append(ParameterHolder(items[i+1]))
-	
-	for i in range(len(theNames)):
-		if theNames[i] == envNameString:
-			indexOfMyEnv = i
-	
-	return theParamHolders[indexOfMyEnv]
+    theRequest = "TO=%d FROM=%d CMD=%d VALTYPE=%d VALS=NULL" % (ENVSHELL, BENCHMARK, LISTQUERY, NOVALUE)
+    theResponse = RLGlue.RL_env_message(theRequest)
+    lastColonPos = theResponse.rfind("=")
+    thePayLoad = theResponse[lastColonPos+1:]
+    if thePayLoad[-1] == ':':
+        thePayLoad = thePayLoad[:-1]
+    items = thePayLoad.split(':')
+    theNames = []
+    theParamHolders = []
+    for i in range(1,len(items),2):
+        theNames.append(items[i])
+        theParamHolders.append(ParameterHolder(items[i+1]))
+    
+    indexOfMyEnv = -1
+    for i in range(len(theNames)):
+        if theNames[i] == envNameString:
+            indexOfMyEnv = i
+
+    if indexOfMyEnv == -1:
+        print envNameString
+        print theNames
+        print theResponse
+        exit()
+    return theParamHolders[indexOfMyEnv]
 
 #(string) -> void
 def preloadAndLoad(envNameString):
-	p = preload(envNameString)
-	load(envNameString,p)
+    p = preload(envNameString)
+    load(envNameString,p)
 
 #
 # Tetris has an integer parameter called pnum that takes values in [0,19]
@@ -65,10 +71,10 @@ def preloadAndLoad(envNameString):
 #
 #(int) -> void
 def loadTetris(whichParamSet):
-	theEnvString = "GeneralizedTetris - Java"
-	theParams = preload(theEnvString)
-	theParams.setIntegerParam("pnum",whichParamSet)
-	load(theEnvString, theParams)
+    theEnvString = "GeneralizedTetris - Java"
+    theParams = preload(theEnvString)
+    theParams.setIntegerParam("pnum",whichParamSet)
+    load(theEnvString, theParams)
 
 #
 # MountainCar has an integer parameter called pnum that takes values in [0,29]
@@ -76,10 +82,10 @@ def loadTetris(whichParamSet):
 #
 # (int) -> void
 def loadMountainCar(whichParamSet):
-	theEnvString = "GeneralizedMountainCar - Java"
-	theParams = preload(theEnvString)
-	theParams.setIntegerParam("pnum",whichParamSet)
-	load(theEnvString, theParams)
+    theEnvString = "GeneralizedMountainCar - Java"
+    theParams = preload(theEnvString)
+    theParams.setIntegerParam("pnum",whichParamSet)
+    load(theEnvString, theParams)
 
 #
 # Acrobot has an integer parameter called pnum that takes values in [0,49]
@@ -87,10 +93,10 @@ def loadMountainCar(whichParamSet):
 #
 # (int) -> void
 def loadAcrobot(whichParamSet):
-	theEnvString = "GeneralizedAcrobot - Java"
-	theParams = preload(theEnvString)
-	theParams.setIntegerParam("pnum",whichParamSet)
-	load(theEnvString, theParams)
+    theEnvString = "GeneralizedAcrobot - Java"
+    theParams = preload(theEnvString)
+    theParams.setIntegerParam("pnum",whichParamSet)
+    load(theEnvString, theParams)
 
 
 
@@ -100,16 +106,16 @@ def loadAcrobot(whichParamSet):
 #
 #(int) -> void
 def loadHelicopter(whichParamSet):
-	theEnvString = "GeneralizedHelicopter - Java"
-	theParams = preload(theEnvString)
-	theParams.setIntegerParam("pnum",whichParamSet)
-	load(theEnvString, theParams)
+    theEnvString = "GeneralizedHelicopter - Java"
+    theParams = preload(theEnvString)
+    theParams.setIntegerParam("pnum",whichParamSet)
+    load(theEnvString, theParams)
 
 def loadPolyathlon(whichParamSet):
-	theEnvString = "TrainingPolyathlon - Java"
-	theParams = preload(theEnvString)
-	theParams.setIntegerParam("whichDomain",whichParamSet)
-	load(theEnvString, theParams)
+    theEnvString = "TrainingPolyathlon - Java"
+    theParams = preload(theEnvString)
+    theParams.setIntegerParam("whichDomain",whichParamSet)
+    load(theEnvString, theParams)
 
 #
 # Mario has 6 params:
